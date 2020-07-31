@@ -26,14 +26,12 @@
 package org.geysermc.connector.network.translators.inventory;
 
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.ItemStack;
+import com.github.steveice10.mc.protocol.data.message.MessageSerializer;
+import com.github.steveice10.mc.protocol.data.message.TextMessage;
 import com.github.steveice10.mc.protocol.packet.ingame.client.window.ClientRenameItemPacket;
 import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
-import com.google.gson.JsonSyntaxException;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.protocol.bedrock.data.inventory.*;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.geysermc.connector.inventory.Inventory;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.inventory.updater.CursorInventoryUpdater;
@@ -108,13 +106,7 @@ public class AnvilInventoryTranslator extends BlockInventoryTranslator {
             String rename;
             NbtMap tag = itemName.getTag();
             if (tag != null) {
-                String name = tag.getCompound("display").getString("Name");
-                try {
-                    Component component = GsonComponentSerializer.gson().deserialize(name);
-                    rename = LegacyComponentSerializer.legacySection().serialize(component);
-                } catch (JsonSyntaxException e) {
-                    rename = name;
-                }
+                rename = tag.getCompound("display").getString("Name");
             } else {
                 rename = "";
             }
@@ -146,12 +138,8 @@ public class AnvilInventoryTranslator extends BlockInventoryTranslator {
                     CompoundTag displayTag = tag.get("display");
                     if (displayTag != null && displayTag.contains("Name")) {
                         String itemName = displayTag.get("Name").getValue().toString();
-                        try {
-                            Component component = GsonComponentSerializer.gson().deserialize(itemName);
-                            rename = LegacyComponentSerializer.legacySection().serialize(component);
-                        } catch (JsonSyntaxException e) {
-                            rename = itemName;
-                        }
+                        TextMessage message = (TextMessage) MessageSerializer.fromString(itemName);
+                        rename = message.getText();
                     } else {
                         rename = "";
                     }

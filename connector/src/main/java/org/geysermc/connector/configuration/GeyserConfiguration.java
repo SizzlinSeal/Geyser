@@ -76,6 +76,8 @@ public interface GeyserConfiguration {
     boolean isAboveBedrockNetherBuilding();
 
     boolean isCacheChunks();
+	
+	boolean isAllowCustomSkulls();
 
     IMetricsInfo getMetrics();
 
