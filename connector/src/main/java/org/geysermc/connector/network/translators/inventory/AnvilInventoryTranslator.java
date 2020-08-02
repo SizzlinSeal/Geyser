@@ -102,7 +102,7 @@ public class AnvilInventoryTranslator extends BlockInventoryTranslator {
         } else if (anvilInput != null) {
             itemName = anvilInput.getToItem();
         }
-        if (itemName != null) {
+		if (itemName != null) {
             String rename;
             NbtMap tag = itemName.getTag();
             if (tag != null && tag.containsKey("display")) {
