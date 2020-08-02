@@ -79,7 +79,7 @@ public class GeyserConnector {
     public static final BedrockPacketCodec BEDROCK_PACKET_CODEC = Bedrock_v407.V407_CODEC;
 
     public static final String NAME = "Geyser";
-    public static final String VERSION = "1.0.0 (git-master-07c0c42)"; // A fallback for running in IDEs
+    public static final String VERSION = "DEV"; // A fallback for running in IDEs
 
     private static final String IP_REGEX = "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b";
 

@@ -32,6 +32,9 @@ import com.github.steveice10.mc.protocol.packet.ingame.client.window.ClientRenam
 import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.protocol.bedrock.data.inventory.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.geysermc.connector.inventory.Inventory;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.inventory.updater.CursorInventoryUpdater;
@@ -106,13 +109,7 @@ public class AnvilInventoryTranslator extends BlockInventoryTranslator {
             String rename;
             NbtMap tag = itemName.getTag();
             if (tag != null && tag.containsKey("display")) {
-                String name = tag.getCompound("display").getString("Name");
-                try {
-                    Component component = GsonComponentSerializer.gson().deserialize(name);
-                    rename = LegacyComponentSerializer.legacySection().serialize(component);
-                } catch (JsonSyntaxException e) {
-                    rename = name;
-                }
+                rename = tag.getCompound("display").getString("Name");
             } else {
                 rename = "";
             }
