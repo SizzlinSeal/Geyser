@@ -81,6 +81,8 @@ public interface GeyserConfiguration {
 
     int getCacheImages();
 
+    boolean isAllowCustomSkulls();
+
     IMetricsInfo getMetrics();
 
     int getMtu();
