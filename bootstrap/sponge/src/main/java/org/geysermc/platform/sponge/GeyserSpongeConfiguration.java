@@ -148,9 +148,8 @@ public class GeyserSpongeConfiguration implements GeyserConfiguration {
     public boolean isCacheChunks() {
         return node.getNode("cache-chunks").getBoolean(false);
     }
-
-
-    @Override
+	
+	@Override
     public boolean isAllowCustomSkulls() {
         return node.getNode("allow-custom-skulls").getBoolean(true);
     }
@@ -164,8 +163,8 @@ public class GeyserSpongeConfiguration implements GeyserConfiguration {
     public boolean isAboveBedrockNetherBuilding() {
         return node.getNode("above-bedrock-nether-building").getBoolean(false);
     }
-
-    @Override
+	
+	@Override
     public boolean isForceResourcePacks() {
         return node.getNode("force-resource-packs").getBoolean(true);
     }

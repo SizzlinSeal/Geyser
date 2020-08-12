@@ -89,7 +89,7 @@ public abstract class GeyserJacksonConfiguration implements GeyserConfiguration 
 
     @JsonProperty("cache-images")
     private int cacheImages = 0;
-
+    
     @JsonProperty("allow-custom-skulls")
     private boolean allowCustomSkulls;
 
@@ -100,12 +100,6 @@ public abstract class GeyserJacksonConfiguration implements GeyserConfiguration 
     private boolean forceResourcePacks;
 
     private MetricsInfo metrics;
-
-    @JsonProperty("mtu")
-    private int mtu = 1400;
-
-    @JsonProperty("config-version")
-    private int configVersion;
 
     @Getter
     public static class BedrockConfiguration implements IBedrockConfiguration {
@@ -152,4 +146,10 @@ public abstract class GeyserJacksonConfiguration implements GeyserConfiguration 
         @JsonProperty("uuid")
         private String uniqueId;
     }
+
+    @JsonProperty("mtu")
+    private int mtu = 1400;
+
+    @JsonProperty("config-version")
+    private int configVersion;
 }

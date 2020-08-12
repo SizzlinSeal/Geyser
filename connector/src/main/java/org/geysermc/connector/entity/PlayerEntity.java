@@ -63,6 +63,8 @@ public class PlayerEntity extends LivingEntity {
     private final EntityEffectCache effectCache;
 
     private SkinProvider.SkinGeometry geometry;
+	
+	private SkinProvider.SkinGeometry geometry;
 
     private Entity leftParrot;
     private Entity rightParrot;
