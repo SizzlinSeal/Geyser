@@ -61,8 +61,6 @@ public class PlayerEntity extends LivingEntity {
     private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
     private final EntityEffectCache effectCache;
-
-    private SkinProvider.SkinGeometry geometry;
 	
 	private SkinProvider.SkinGeometry geometry;
 
