@@ -7,9 +7,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipFile;
 
+/**
+ * This represents a resource pack and all the data relevant to it
+ */
 public class ResourcePack {
+    /**
+     * The list of loaded resource packs
+     */
     public static final Map<String, ResourcePack> PACKS = new HashMap<>();
 
+    /**
+     * The size of each chunk to use when sending the resource packs to clients in bytes
+     */
     public static final int CHUNK_SIZE = 102400;
 
     private byte[] sha256;

@@ -83,6 +83,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
@@ -105,7 +107,7 @@ public class GeyserSession implements CommandSender {
     private InventoryCache inventoryCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
-    private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
+	private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
     @Setter
     private TeleportCache teleportCache;
 
