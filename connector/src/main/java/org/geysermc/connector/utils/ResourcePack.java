@@ -9,6 +9,7 @@ import java.util.zip.ZipFile;
 
 public class ResourcePack {
     public static final Map<String, ResourcePack> PACKS = new HashMap<>();
+
     public static final int CHUNK_SIZE = 102400;
 
     private byte[] sha256;
@@ -16,11 +17,17 @@ public class ResourcePack {
     private ResourcePackManifest manifest;
     private ResourcePackManifest.Version version;
 
+    /**
+     * Loop through the packs directory and locate valid resource pack files
+     */
     public static void loadPacks() {
-        File directory = new File("packs");
+        File directory = GeyserConnector.getInstance().getBootstrap().getConfigFolder().resolve("packs").toFile();
             
         if (!directory.exists()) {
             directory.mkdir();
+
+            // As we just created the directory it will be empty
+            return;
         }
         
         for(File file : directory.listFiles()) {
@@ -48,7 +55,7 @@ public class ResourcePack {
                         }
                     });
                 } catch (Exception e) {
-                    GeyserConnector.getInstance().getLogger().error(file.getName() + " " + "is broken!");
+                    GeyserConnector.getInstance().getLogger().error(LanguageUtils.getLocaleStringLog("geyser.resource_pack.broken", file.getName()));
                     e.printStackTrace();
                 }
             }
