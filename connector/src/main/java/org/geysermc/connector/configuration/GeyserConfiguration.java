@@ -50,6 +50,9 @@ public interface GeyserConfiguration {
     boolean isPassthroughMotd();
 
     @JsonIgnore
+    boolean isPassthroughProtocolName();
+
+    @JsonIgnore
     boolean isPassthroughPlayerCounts();
 
     @JsonIgnore
@@ -123,6 +126,9 @@ public interface GeyserConfiguration {
 
         String getUniqueId();
     }
+
+    // if u have offline mode enabled pls be safe
+    boolean isEnableProxyConnections();
 
     int getMtu();
 
