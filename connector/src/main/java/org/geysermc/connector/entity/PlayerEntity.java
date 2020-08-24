@@ -86,6 +86,8 @@ public class PlayerEntity extends LivingEntity {
     @Override
     public void spawnEntity(GeyserSession session) {
         if (geyserId == 1) return;
+        if (!session.getUpstream().isInitialized())
+            return;
 
         AddPlayerPacket addPlayerPacket = new AddPlayerPacket();
         addPlayerPacket.setUuid(uuid);
@@ -118,7 +120,7 @@ public class PlayerEntity extends LivingEntity {
         if(session.getEntityCache().getPlayerEntity(uuid) == null)
             return;
 
-        if (session.getUpstream().isInitialized() && session.getEntityCache().getEntityByGeyserId(geyserId) == null) {
+        if (session.getEntityCache().getEntityByGeyserId(geyserId) == null) {
             session.getEntityCache().spawnEntity(this);
         } else {
             spawnEntity(session);

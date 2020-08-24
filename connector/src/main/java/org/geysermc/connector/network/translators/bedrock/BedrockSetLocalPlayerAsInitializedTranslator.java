@@ -45,13 +45,6 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                 session.getUpstream().setInitialized(true);
                 session.login();
 
-                for (PlayerEntity entity : session.getEntityCache().getEntitiesByType(PlayerEntity.class)) {
-                    if (!entity.isValid()) {
-                        SkinUtils.requestAndHandleSkinAndCape(entity, session, null);
-                        entity.sendPlayer(session);
-                    }
-                }
-
                 // Send Skulls
                 for (PlayerEntity entity : session.getSkullCache().values()) {
                     entity.spawnEntity(session);
@@ -61,7 +54,6 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                         entity.updateBedrockMetadata(session);
                     }, 2, TimeUnit.SECONDS));
                 }
-
             }
         }
     }
