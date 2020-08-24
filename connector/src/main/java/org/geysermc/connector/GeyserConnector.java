@@ -48,6 +48,7 @@ import org.geysermc.connector.network.translators.effect.EffectRegistry;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.network.translators.item.ItemTranslator;
 import org.geysermc.connector.network.translators.item.PotionMixRegistry;
+import org.geysermc.connector.network.translators.item.RecipeRegistry;
 import org.geysermc.connector.network.translators.sound.SoundHandlerRegistry;
 import org.geysermc.connector.network.translators.sound.SoundRegistry;
 import org.geysermc.connector.network.translators.world.WorldManager;
@@ -133,6 +134,7 @@ public class GeyserConnector {
         ItemTranslator.init();
         LocaleUtils.init();
         PotionMixRegistry.init();
+        RecipeRegistry.init();
         SoundRegistry.init();
         SoundHandlerRegistry.init();
 
@@ -220,6 +222,10 @@ public class GeyserConnector {
             message += LanguageUtils.getLocaleStringLog("geyser.core.finish.console");
         }
         logger.info(message);
+        
+        if (platformType == PlatformType.STANDALONE) {
+            logger.warning(LanguageUtils.getLocaleStringLog("geyser.core.movement_warn"));
+        }
     }
 
     public void shutdown() {
