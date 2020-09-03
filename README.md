@@ -1,12 +1,3 @@
-## This branch is a combination of many different geyser forks
-- Don't message geyser devs if you find a problem
-- Create a issue on my fork I will try and fix it
-- Here's a list of features this branch includes:
-  - Custom Skulls (https://github.com/OnlyBMan/Geyser/tree/custom-skulls)
-  - Resources Pack Loading (https://github.com/GeyserMC/Geyser/tree/resources)
-  - Pull requests from the master branch that fix bugs and optimise Geyser (https://github.com/GeyserMC/Geyser/pulls)
-  - Other random bug fixes from other users forks (https://github.com/GeyserMC/Geyser/network/members) mainly the contributors (https://github.com/GeyserMC/Geyser/graphs/contributors)
-
 <img src="https://geysermc.org/img/geyser-1760-860.png" alt="Geyser" width="600"/>
 
 [![forthebadge made-with-java](http://ForTheBadge.com/images/badges/made-with-java.svg)](https://java.com/)
