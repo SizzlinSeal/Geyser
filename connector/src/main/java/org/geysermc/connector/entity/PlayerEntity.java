@@ -51,6 +51,8 @@ import org.geysermc.connector.network.session.cache.EntityEffectCache;
 import org.geysermc.connector.scoreboard.Team;
 import org.geysermc.connector.utils.AttributeUtils;
 import org.geysermc.connector.utils.MessageUtils;
+import org.geysermc.connector.utils.SkinProvider;
+import org.geysermc.connector.utils.SkinUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +68,8 @@ public class PlayerEntity extends LivingEntity {
     private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
     private final EntityEffectCache effectCache;
+	
+	private SkinProvider.SkinGeometry geometry;
 
     /**
      * Saves the parrot currently on the player's left shoulder; otherwise null
@@ -95,6 +99,8 @@ public class PlayerEntity extends LivingEntity {
     @Override
     public void spawnEntity(GeyserSession session) {
         if (geyserId == 1) return;
+        if (!session.getUpstream().isInitialized())
+            return;
 
         AddPlayerPacket addPlayerPacket = new AddPlayerPacket();
         addPlayerPacket.setUuid(uuid);
@@ -127,7 +133,7 @@ public class PlayerEntity extends LivingEntity {
         if(session.getEntityCache().getPlayerEntity(uuid) == null)
             return;
 
-        if (session.getUpstream().isInitialized() && session.getEntityCache().getEntityByGeyserId(geyserId) == null) {
+        if (session.getEntityCache().getEntityByGeyserId(geyserId) == null) {
             session.getEntityCache().spawnEntity(this);
         } else {
             spawnEntity(session);
