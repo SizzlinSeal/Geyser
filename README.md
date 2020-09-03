@@ -1,3 +1,12 @@
+## This branch is a combination of many different geyser forks
+- Don't message geyser devs if you find a problem
+- Create a issue on my fork I will try and fix it
+- Here's a list of features this branch includes:
+  - Custom Skulls (https://github.com/OnlyBMan/Geyser/tree/custom-skulls)
+  - Resources Pack Loading (https://github.com/GeyserMC/Geyser/tree/resources)
+  - Pull requests from the master branch that fix bugs and optimise Geyser (https://github.com/GeyserMC/Geyser/pulls)
+  - Other random bug fixes from other users forks (https://github.com/GeyserMC/Geyser/network/members) mainly the contributors (https://github.com/GeyserMC/Geyser/graphs/contributors)
+
 <img src="https://geysermc.org/img/geyser-1760-860.png" alt="Geyser" width="600"/>
 
 [![forthebadge made-with-java](http://ForTheBadge.com/images/badges/made-with-java.svg)](https://java.com/)
@@ -50,7 +59,7 @@ Take a look [here](https://github.com/GeyserMC/Geyser/wiki#Setup) for how to set
 1. Clone the repo to your computer
 2. [Install Maven](https://maven.apache.org/install.html)
 3. Navigate to the Geyser root directory and run `git submodule update --init --recursive`. This downloads all the needed submodules for Geyser and is a crucial step in this process.
-4. Run `mvn clean install` and locate to the `target` folder.
+4. Run `mvn -U clean install` and locate to the `target` folder.
 
 ## Contributing
 Any contributions are appreciated. Please feel free to reach out to us on [Discord](http://discord.geysermc.org/) if
@@ -61,5 +70,7 @@ you're interested in helping out with Geyser.
 - [Steveice10's Java Protocol Library](https://github.com/Steveice10/MCProtocolLib)
 - [TerminalConsoleAppender](https://github.com/Minecrell/TerminalConsoleAppender)
 - [Simple Logging Facade for Java (slf4j)](https://github.com/qos-ch/slf4j)
+
+## Update submodules VVV
 
 Do `git submodule update` to update submodules in local branch to update submodules
