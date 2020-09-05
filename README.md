@@ -1,3 +1,6 @@
+## Warning Do not use master branch it is not tested use 1.16.2-Skull-Resources Branch
+- (https://github.com/Hellohi3654/Geyser/tree/1.16.2-Skull-Resources)
+
 ## This branch is a combination of many different geyser forks
 - Don't message geyser devs if you find a problem
 - Create a issue on my fork I will try and fix it
