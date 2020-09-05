@@ -4,6 +4,15 @@
 name: Geyser Build Branch
 
 on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Build'
+        required: true
+        default: 'Build'
+      home:
+        description: 'location'
+        required: false
   release:
     types: [created]
 

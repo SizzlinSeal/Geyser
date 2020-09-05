@@ -72,7 +72,8 @@ public class JavaChunkDataTranslator extends PacketTranslator<ServerChunkDataPac
         GeyserConnector.getInstance().getGeneralThreadPool().execute(() -> {
             try {
 
-                ChunkUtils.ChunkData chunkData = ChunkUtils.translateToBedrock(packet.getColumn(), session, isNonFullChunk);
+                ChunkUtils.ChunkData chunkData = ChunkUtils.translateToBedrock(session, packet.getColumn(), isNonFullChunk);
+
 
                 ByteBuf byteBuf = Unpooled.buffer(32);
                 ChunkSection[] sections = chunkData.sections;
