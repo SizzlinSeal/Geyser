@@ -4,8 +4,6 @@
 name: Geyser Build Branch
 
 on:
-  schedule:
-    - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
       name:
