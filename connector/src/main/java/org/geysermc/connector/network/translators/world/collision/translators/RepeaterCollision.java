@@ -30,8 +30,8 @@ import org.geysermc.connector.network.translators.world.collision.CollisionRemap
 import org.geysermc.connector.utils.BoundingBox;
 
 @CollisionRemapper(regex = "^repeater$")
-public class CarpetCollision extends BlockCollision {
-    public CarpetCollision(String params) {
+public class RepeaterCollision extends BlockCollision {
+    public RepeaterCollision(String params) {
         super();
         boundingBoxes = new BoundingBox[]{
                 new BoundingBox(0.5, 0.0625, 0.5, 1, 0.125, 1)
