@@ -1,6 +1,6 @@
 ## Warning Do not use master branch it is not tested 
-## Instead use 1.16.2-Skull-Resources Branch VVV
-- (https://github.com/Hellohi3654/Geyser/tree/1.16.2-Skull-Resources)
+## Instead use Test-Move-Fixes Branch VVV
+- (https://github.com/Hellohi3654/Geyser/tree/Test-Move-Fixes)
 
 ## This branch is a combination of many different geyser forks
 - Don't message geyser devs if you find a problem
