@@ -29,12 +29,12 @@ package org.geysermc.connector.network.translators.world.collision.translators;
 import org.geysermc.connector.network.translators.world.collision.CollisionRemapper;
 import org.geysermc.connector.utils.BoundingBox;
 
-@CollisionRemapper(regex = "^stonecutter$")
+@CollisionRemapper(regex = "_stonecutter$")
 public class StoneCutterCollision extends BlockCollision {
     public StoneCutterCollision(String params) {
         super();
         boundingBoxes = new BoundingBox[]{
-                new BoundingBox(0.5, 0.25, 0.5, 1, 0.5, 1)
+                new BoundingBox(0.5, 0.28125, 0.5, 1, 0.5625, 1)
         };
     }
 }
