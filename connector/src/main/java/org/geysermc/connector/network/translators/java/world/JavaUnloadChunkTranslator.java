@@ -46,7 +46,7 @@ public class JavaUnloadChunkTranslator extends PacketTranslator<ServerUnloadChun
         Iterator<Position> iterator = session.getSkullCache().keySet().iterator();
         while (iterator.hasNext()) {
             Position position = iterator.next();
-            if (Math.floor(position.getX() / 2) == packet.getX() && Math.floor(position.getZ() / 2) == packet.getZ()) {
+            if (Math.floor(position.getX() / 32) == packet.getX() && Math.floor(position.getZ() / 32) == packet.getZ()) {
                 session.getSkullCache().get(position).despawnEntity(session);
                 iterator.remove();
             }
