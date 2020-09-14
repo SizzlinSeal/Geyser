@@ -30,8 +30,8 @@ import org.geysermc.connector.network.translators.world.collision.CollisionRemap
 import org.geysermc.connector.utils.BoundingBox;
 
 @CollisionRemapper(regex = ".*stonecutter$")
-public class EnchantingTableCollision extends BlockCollision {
-    public EnchantingTableCollision(String params) {
+public class StoneCutterCollision extends BlockCollision {
+    public StoneCutterCollision(String params) {
         super();
         boundingBoxes = new BoundingBox[]{
                 new BoundingBox(0.5, 0.28125, 0.5, 1, 0.5625, 1)
