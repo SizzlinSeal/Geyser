@@ -30,8 +30,8 @@ import org.geysermc.connector.network.translators.world.collision.CollisionRemap
 import org.geysermc.connector.utils.BoundingBox;
 
 @CollisionRemapper(regex = ".*lily_pad$")
-public class EnchantingTableCollision extends BlockCollision {
-    public EnchantingTableCollision(String params) {
+public class LilyPadCollision extends BlockCollision {
+    public LilyPadCollision(String params) {
         super();
         boundingBoxes = new BoundingBox[]{
                 new BoundingBox(0.5, 0.0234375, 0.5, 1, 0.046875, 1)
