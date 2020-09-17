@@ -83,6 +83,8 @@ public interface GeyserConfiguration {
     
     boolean isAllowCustomSkulls();
 
+    boolean isForceResourcePacks();
+
     int getCacheImages();
 
     IMetricsInfo getMetrics();

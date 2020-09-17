@@ -41,6 +41,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.net.URL;
+import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.function.Function;
 
 public class FileUtils {
@@ -173,9 +175,9 @@ public class FileUtils {
         }
 
         return sha256;
-}
+    }
 
-	/**
+    /**
      * Get the stored reflection data for a given path
      *
      * @param path The path to get the reflection data for

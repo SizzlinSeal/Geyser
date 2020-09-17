@@ -246,3 +246,4 @@ locales/
 .vscode
 # Note: Manually edited to change cache/ to /cache/
 /cache/
+/packs/
