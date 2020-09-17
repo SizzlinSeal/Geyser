@@ -42,17 +42,6 @@ public class MathUtils {
         return floatNumber > truncated ? truncated + 1 : truncated;
     }
 
-    public static double constrain(double num, double min, double max) {
-        if (num > max) {
-            num = max;
-        }
-        if (num < min) {
-            num = min;
-        }
-
-        return num;
-    }
-
     /**
      * If number is greater than the max, set it to max, and if number is lower than low, set it to low.
      * @param num number to calculate

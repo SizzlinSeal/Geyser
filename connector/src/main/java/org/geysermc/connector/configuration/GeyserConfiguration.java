@@ -76,8 +76,6 @@ public interface GeyserConfiguration {
     Path getFloodgateKeyPath();
 
     boolean isAboveBedrockNetherBuilding();
-    
-    boolean isForceResourcePacks();
 
     boolean isCacheChunks();
     
