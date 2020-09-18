@@ -34,7 +34,7 @@ public class LilyPadCollision extends BlockCollision {
     public LilyPadCollision(String params) {
         super();
         boundingBoxes = new BoundingBox[]{
-                new BoundingBox(0.5, 0.01171875, 0.5, 1, 0.0234375, 1)
+                new BoundingBox(0.5, 0.0234375, 0.5, 1, 0.046875, 1)
         };
     }
 }
