@@ -29,7 +29,7 @@ package org.geysermc.connector.network.translators.world.collision.translators;
 import org.geysermc.connector.network.translators.world.collision.CollisionRemapper;
 import org.geysermc.connector.utils.BoundingBox;
 
-@CollisionRemapper(regex = ".*lily_pad$")
+@CollisionRemapper(regex = "_pad$")
 public class LilyPadCollision extends BlockCollision {
     public LilyPadCollision(String params) {
         super();
