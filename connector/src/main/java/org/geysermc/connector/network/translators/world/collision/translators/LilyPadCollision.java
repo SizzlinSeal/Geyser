@@ -29,12 +29,12 @@ package org.geysermc.connector.network.translators.world.collision.translators;
 import org.geysermc.connector.network.translators.world.collision.CollisionRemapper;
 import org.geysermc.connector.utils.BoundingBox;
 
-@CollisionRemapper(regex = "_pad$")
+@CollisionRemapper(regex = ".*lily_pad$")
 public class LilyPadCollision extends BlockCollision {
     public LilyPadCollision(String params) {
         super();
         boundingBoxes = new BoundingBox[]{
-                new BoundingBox(0.5, 0.0234375, 0.5, 1, 0.046875, 1)
+                new BoundingBox(0.5, 0.046875, 0.5, 1, 0.09375, 1)
         };
     }
 }
