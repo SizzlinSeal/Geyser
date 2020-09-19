@@ -28,7 +28,7 @@ package org.geysermc.connector.network.translators.world.collision.translators;
 import org.geysermc.connector.network.translators.world.collision.CollisionRemapper;
 import org.geysermc.connector.utils.BoundingBox;
 
-@CollisionRemapper(regex = "_campfire$")
+@CollisionRemapper(regex = ".*campfire$|_campfire$")
 public class CampfireCollision extends BlockCollision {
     public CampfireCollision(String params) {
         super();
