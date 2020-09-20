@@ -24,15 +24,24 @@
  *
  */
 
-package org.geysermc.connector.network.translators.world.collision.translators;
+package org.geysermc.connector.network.translators.world.collision;
 
-import org.geysermc.connector.network.translators.world.collision.CollisionRemapper;
-import org.geysermc.connector.utils.BoundingBox;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-@CollisionRemapper(regex = "air$|_sapling$|^water$|^lava$|_rail$|^cobweb$|^grass$|fern$|^dead_bush$|^dandelion$|^poppy$|^blue_orchid$|^allium$|^azure_bluet$|_tulip$|^oxeye_daisy$|^cornflower$|^wither_rose$|^lily_of_the_valley$|_mushroom$|^fire$|^redstone_wire$|^wheat$|^rail$|_sign$|^lever$|torch$|^sugar_cane$|_stem$|^vine$|^nether_wart$|_portal$|^tripwire|^potted_dandelion$|^carrots$|^potatoes$|_button$|_pressure_plate$|^sunflower$|^lilac$|^rose_bush$|^tall_grass$|_banner$|^beetroots$|^end_gateway$")
-public class EmptyCollision extends BlockCollision {
-    public EmptyCollision(String params) {
-        super();
-        boundingBoxes = new BoundingBox[0];
-    }
+@Retention(value = RetentionPolicy.RUNTIME)
+public @interface CollisionRemapper {
+
+    String regex();
+
+    /*
+     * Defaults to matching any value
+     */
+    String paramRegex() default ".*";
+
+    /*
+     * Signals if a new instance needs to created for every block state
+     */
+    boolean usesParams() default false;
 }
