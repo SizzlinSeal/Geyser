@@ -33,7 +33,8 @@ import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.protocol.bedrock.data.inventory.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import org.geysermc.connector.common.ChatColor;
 import org.geysermc.connector.inventory.Inventory;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.inventory.updater.CursorInventoryUpdater;
@@ -111,7 +112,7 @@ public class AnvilInventoryTranslator extends BlockInventoryTranslator {
                 String name = tag.getCompound("display").getString("Name");
                 try {
                     Component component = GsonComponentSerializer.gson().deserialize(name);
-                    rename = LegacyComponentSerializer.legacySection().serialize(component);
+                    rename = ChatColor.stripColors(PlainComponentSerializer.plain().serialize(component));
                 } catch (JsonSyntaxException e) {
                     rename = name;
                 }
@@ -148,7 +149,7 @@ public class AnvilInventoryTranslator extends BlockInventoryTranslator {
                         String itemName = displayTag.get("Name").getValue().toString();
                         try {
                             Component component = GsonComponentSerializer.gson().deserialize(itemName);
-                            rename = LegacyComponentSerializer.legacySection().serialize(component);
+                            rename = ChatColor.stripColors(PlainComponentSerializer.plain().serialize(component));
                         } catch (JsonSyntaxException e) {
                             rename = itemName;
                         }
