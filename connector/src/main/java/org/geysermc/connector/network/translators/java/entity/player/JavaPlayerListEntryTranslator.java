@@ -80,7 +80,6 @@ public class JavaPlayerListEntryTranslator extends PacketTranslator<ServerPlayer
 
                     playerEntity.setProfile(entry.getProfile());
                     playerEntity.setPlayerList(true);
-                    playerEntity.setValid(true);
 
                     PlayerListPacket.Entry playerListEntry = SkinUtils.buildCachedEntry(playerEntity);
                     if (self) {
@@ -116,8 +115,6 @@ public class JavaPlayerListEntryTranslator extends PacketTranslator<ServerPlayer
             }
         }
 
-        if (packet.getAction() == PlayerListEntryAction.REMOVE_PLAYER || session.getUpstream().isInitialized()) {
-            session.sendUpstreamPacket(translate);
-        }
+        session.sendUpstreamPacket(translate);
     }
 }
