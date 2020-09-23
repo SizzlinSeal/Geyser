@@ -67,31 +67,22 @@ public class JavaJoinGameTranslator extends PacketTranslator<ServerJoinGamePacke
         bedrockPacket.setPlayerPermission(PlayerPermission.MEMBER);
         session.sendUpstreamPacket(bedrockPacket);
 
-        PlayStatusPacket playStatus = new PlayStatusPacket();
-        playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
-        // session.sendPacket(playStatus);
-
         SetPlayerGameTypePacket playerGameTypePacket = new SetPlayerGameTypePacket();
         playerGameTypePacket.setGamemode(packet.getGameMode().ordinal());
         session.sendUpstreamPacket(playerGameTypePacket);
         session.setGameMode(packet.getGameMode());
-
-//        SetEntityDataPacket entityDataPacket = new SetEntityDataPacket();
-//        entityDataPacket.setRuntimeEntityId(entity.getGeyserId());
-//        entityDataPacket.getMetadata().putAll(entity.getMetadata());
-//        session.sendUpstreamPacket(entityDataPacket);
 
         // Send if client should show respawn screen
         GameRulesChangedPacket gamerulePacket = new GameRulesChangedPacket();
         gamerulePacket.getGameRules().add(new GameRuleData<>("doimmediaterespawn", !packet.isEnableRespawnScreen()));
         session.sendUpstreamPacket(gamerulePacket);
 
-        session.setRenderDistance(packet.getViewDistance());
+        session.setServerRenderDistance(packet.getViewDistance());
 
         // We need to send our skin parts to the server otherwise java sees us with no hat, jacket etc
         String locale = session.getClientData().getLanguageCode();
         List<SkinPart> skinParts = Arrays.asList(SkinPart.values());
-        ClientSettingsPacket clientSettingsPacket = new ClientSettingsPacket(locale, (byte) session.getRenderDistance(), ChatVisibility.FULL, true, skinParts, HandPreference.RIGHT_HAND);
+        ClientSettingsPacket clientSettingsPacket = new ClientSettingsPacket(locale, (byte) session.getClientRenderDistance(), ChatVisibility.FULL, true, skinParts, HandPreference.RIGHT_HAND);
         session.sendDownstreamPacket(clientSettingsPacket);
 
         session.sendDownstreamPacket(new ClientPluginMessagePacket("minecraft:brand", PluginMessageUtils.getGeyserBrandData()));
