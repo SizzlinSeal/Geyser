@@ -925,6 +925,7 @@ public class GeyserSession implements CommandSender {
      */
     public void unregisterPluginChannel(String channel) {
         sendDownstreamPacket(new ClientPluginMessagePacket("minecraft:unregister", channel.getBytes()));
+	}
 
 	/**
      * Updates the stored bounding box
