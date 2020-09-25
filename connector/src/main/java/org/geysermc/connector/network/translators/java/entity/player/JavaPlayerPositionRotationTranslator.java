@@ -30,7 +30,6 @@ import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTelepo
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerPositionRotationPacket;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.packet.MovePlayerPacket;
-import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.RespawnPacket;
 import com.nukkitx.protocol.bedrock.packet.SetEntityDataPacket;
 import org.geysermc.connector.entity.PlayerEntity;
@@ -50,13 +49,6 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
         PlayerEntity entity = session.getPlayerEntity();
         if (entity == null)
             return;
-
-        if (!session.getUpstream().isInitialized()) {
-            // Spawn the player
-            PlayStatusPacket playStatusPacket = new PlayStatusPacket();
-            playStatusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
-            session.sendUpstreamPacket(playStatusPacket);
-        }
 
         if (!session.isLoggedIn())
             return;
@@ -105,7 +97,7 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
             double xDis = Math.abs(entity.getPosition().getX() - packet.getX());
             double yDis = entity.getPosition().getY() - packet.getY();
             double zDis = Math.abs(entity.getPosition().getZ() - packet.getZ());
-            if (!(xDis > 1.5 || (yDis < 1.45 || yDis > (entity.isJumping() ? 4.3 : (entity.isSprinting() ? 2.5 : 1.9))) || zDis > 1.5)) {
+            if (!(xDis > 1.5 || (yDis < 1.45 || yDis > (session.isJumping() ? 4.3 : (session.isSprinting() ? 2.5 : 1.9))) || zDis > 1.5)) {
                 // Fake confirm the teleport but don't send it to the client
                 ClientTeleportConfirmPacket teleportConfirmPacket = new ClientTeleportConfirmPacket(packet.getTeleportId());
                 session.sendDownstreamPacket(teleportConfirmPacket);
