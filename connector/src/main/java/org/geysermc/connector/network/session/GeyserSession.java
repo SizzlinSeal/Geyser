@@ -311,7 +311,7 @@ public class GeyserSession implements CommandSender {
 
         this.inventoryCache.getInventories().put(0, inventory);
 		
-		this.playerBoundingBox = new BoundingBox[0];
+		this.playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
 
         EventManager.getInstance().triggerEvent(new SessionConnectEvent(this, "Disconnected by Server")) // TODO: @translate
                 .onCancelled(result -> disconnect(result.getEvent().getMessage()));
