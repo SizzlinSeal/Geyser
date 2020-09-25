@@ -311,7 +311,7 @@ public class GeyserSession implements CommandSender {
 
         this.inventoryCache.getInventories().put(0, inventory);
 		
-		this.playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
+		this.playerBoundingBox = new BoundingBox[0];
 
         EventManager.getInstance().triggerEvent(new SessionConnectEvent(this, "Disconnected by Server")) // TODO: @translate
                 .onCancelled(result -> disconnect(result.getEvent().getMessage()));
@@ -993,7 +993,23 @@ public class GeyserSession implements CommandSender {
         List<Vector3i> collidableBlocks = getPlayerCollidableBlocks();
 
         // Used when correction code needs to be run before the main correction
+        for (Vector3i blockPos : collidableBlocks) {
+            BlockCollision blockCollision = CollisionTranslator.getCollisionAt(
+                    blockPos.getX(), blockPos.getY(), blockPos.getZ(), this
+            );
+            if (blockCollision != null) {
+                blockCollision.beforeCorrectPosition(playerBoundingBox);
+            }
+        }
 
         // Main correction code
+        for (Vector3i blockPos : collidableBlocks) {
+            BlockCollision blockCollision = CollisionTranslator.getCollisionAt(
+                    blockPos.getX(), blockPos.getY(), blockPos.getZ(), this
+            );
+            if (blockCollision != null) {
+                blockCollision.correctPosition(playerBoundingBox);
+            }
+        }
     }
 }
