@@ -36,6 +36,6 @@ public class JavaUpdateViewDistanceTranslator extends PacketTranslator<ServerUpd
 
     @Override
     public void translate(ServerUpdateViewDistancePacket packet, GeyserSession session) {
-        session.setServerRenderDistance(packet.getViewDistance());
+        session.setRenderDistance(packet.getViewDistance());
     }
 }
