@@ -124,7 +124,7 @@ public class GeyserSession implements CommandSender {
     private InventoryCache inventoryCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
-	private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
+    private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
 
     @Getter
@@ -140,13 +140,7 @@ public class GeyserSession implements CommandSender {
 
     @Setter
     private Vector2i lastChunkPosition = null;
-
-    // This is used to store the render distance sent by the Java server so we can use it to update the client accordingly
-    private int serverRenderDistance;
-
-    // This is the bedrock client equivalent of the above `serverRenderDistance`
-    @Setter
-    private int clientRenderDistance;
+    private int renderDistance;
 
     private boolean loggedIn;
     private boolean loggingIn;
@@ -638,23 +632,14 @@ public class GeyserSession implements CommandSender {
         windowCache.showWindow(window, id);
     }
 
-    public void setServerRenderDistance(int serverRenderDistance) {
-        serverRenderDistance = GenericMath.ceil(++serverRenderDistance * MathUtils.SQRT_OF_TWO); //square to circle
-        if (serverRenderDistance > 32) serverRenderDistance = 32; // <3 u ViaVersion but I don't like crashing clients x)
-        this.serverRenderDistance = serverRenderDistance;
+    public void setRenderDistance(int renderDistance) {
+        renderDistance = GenericMath.ceil(++renderDistance * MathUtils.SQRT_OF_TWO); //square to circle
+        if (renderDistance > 32) renderDistance = 32; // <3 u ViaVersion but I don't like crashing clients x)
+        this.renderDistance = renderDistance;
 
         ChunkRadiusUpdatedPacket chunkRadiusUpdatedPacket = new ChunkRadiusUpdatedPacket();
-        chunkRadiusUpdatedPacket.setRadius(getRenderDistance());
+        chunkRadiusUpdatedPacket.setRadius(renderDistance());
         upstream.sendPacket(chunkRadiusUpdatedPacket);
-    }
-
-    /**
-     * This returns the smallest render distance between the server or client
-     *
-     * @return The render distance as an int
-     */
-    public int getRenderDistance() {
-        return Math.min(clientRenderDistance, serverRenderDistance);
     }
 
     public InetSocketAddress getSocketAddress() {
