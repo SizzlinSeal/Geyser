@@ -71,6 +71,8 @@ public class PlayerEntity extends LivingEntity {
 	
 	private SkinProvider.SkinGeometry geometry;
 
+    private GeyserSession session;
+
     /**
      * Saves the parrot currently on the player's left shoulder; otherwise null
      */
@@ -80,15 +82,20 @@ public class PlayerEntity extends LivingEntity {
      */
     private ParrotEntity rightParrot;
 
-    public PlayerEntity(GameProfile gameProfile, long entityId, long geyserId, Vector3f position, Vector3f motion, Vector3f rotation) {
+    public PlayerEntity(GameProfile gameProfile, long entityId, long geyserId, Vector3f position, Vector3f motion, Vector3f rotation, GeyserSession session) {
         super(entityId, geyserId, EntityType.PLAYER, position, motion, rotation);
-
 
         profile = gameProfile;
         uuid = gameProfile.getId();
         username = gameProfile.getName();
         effectCache = new EntityEffectCache();
-        if (geyserId == 1) valid = true;
+
+        if (geyserId == 1) {
+            valid = true;
+            // We only need this for the logged in player
+            this.session = session;
+            session.getCollisionManager().updatePlayerBoundingBox(position);
+        }
     }
 
     @Override
@@ -139,7 +146,7 @@ public class PlayerEntity extends LivingEntity {
     public void moveAbsolute(GeyserSession session, Vector3f position, Vector3f rotation, boolean isOnGround, boolean teleported) {
         // If this is the player logged in through this Geyser session
         if (geyserId == 1) {
-            session.updatePlayerBoundingBox(position);
+            session.getCollisionManager().updatePlayerBoundingBox(position);
         }
 
         setPosition(position);
@@ -174,7 +181,7 @@ public class PlayerEntity extends LivingEntity {
 
         // If this is the player logged in through this Geyser session
         if (geyserId == 1) {
-            session.updatePlayerBoundingBox(position);
+            session.getCollisionManager().updatePlayerBoundingBox(position);
         }
         setOnGround(isOnGround);
 
@@ -238,8 +245,8 @@ public class PlayerEntity extends LivingEntity {
     public void setPosition(Vector3f position) {
         this.position = position.add(0, entityType.getOffset(), 0);
         // If this is the player logged in through this Geyser session
-        if (geyserId == 1) {
-            // session.updateBoundingBox(position); No way to access session... TODO: Fix!
+        if (geyserId == 1 && session != null) {
+            session.getCollisionManager().updatePlayerBoundingBox(position);
         }
     }
 

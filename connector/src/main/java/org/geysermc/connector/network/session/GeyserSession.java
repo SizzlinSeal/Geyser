@@ -124,7 +124,7 @@ public class GeyserSession implements CommandSender {
     private InventoryCache inventoryCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
-	private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
+    private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
 
     @Getter
@@ -140,13 +140,7 @@ public class GeyserSession implements CommandSender {
 
     @Setter
     private Vector2i lastChunkPosition = null;
-
-    // This is used to store the render distance sent by the Java server so we can use it to update the client accordingly
-    private int serverRenderDistance;
-
-    // This is the bedrock client equivalent of the above `serverRenderDistance`
-    @Setter
-    private int clientRenderDistance;
+    private int renderDistance;
 
     private boolean loggedIn;
     private boolean loggingIn;
@@ -160,8 +154,12 @@ public class GeyserSession implements CommandSender {
 
     private final AtomicInteger pendingDimSwitches = new AtomicInteger(0);
 
-    @Setter
     private boolean sneaking;
+
+    public void setSneaking(boolean sneaking) {
+        this.sneaking = sneaking;
+        collisionManager.updatePlayerBoundingBox();
+    }
 
     @Setter
     private boolean sprinting;
@@ -169,8 +167,9 @@ public class GeyserSession implements CommandSender {
     @Setter
     private boolean jumping;
 
-    @Getter
-    private BoundingBox playerBoundingBox;
+    // TODO: Remove
+    // @Getter
+    // private BoundingBox playerBoundingBox;
 
     @Setter
     private int breakingBlock;
@@ -291,6 +290,11 @@ public class GeyserSession implements CommandSender {
 
     private MinecraftProtocol protocol;
 
+    /**
+     * Stores session collision
+     */
+    private CollisionManager collisionManager;
+
     public GeyserSession(GeyserConnector connector, BedrockServerSession bedrockServerSession) {
         this.connector = connector;
         this.upstream = new UpstreamSession(bedrockServerSession);
@@ -301,7 +305,9 @@ public class GeyserSession implements CommandSender {
         this.worldCache = new WorldCache(this);
         this.windowCache = new WindowCache(this);
 
-        this.playerEntity = new PlayerEntity(new GameProfile(UUID.randomUUID(), "unknown"), 1, 1, Vector3f.ZERO, Vector3f.ZERO, Vector3f.ZERO);
+        this.collisionManager = new CollisionManager(this);
+
+        this.playerEntity = new PlayerEntity(new GameProfile(UUID.randomUUID(), "unknown"), 1, 1, Vector3f.ZERO, Vector3f.ZERO, Vector3f.ZERO, this);
         this.inventory = new PlayerInventory();
 
         this.javaPacketCache = new DataCache<>();
@@ -310,8 +316,6 @@ public class GeyserSession implements CommandSender {
         this.loggedIn = false;
 
         this.inventoryCache.getInventories().put(0, inventory);
-		
-		this.playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
 
         EventManager.getInstance().triggerEvent(new SessionConnectEvent(this, "Disconnected by Server")) // TODO: @translate
                 .onCancelled(result -> disconnect(result.getEvent().getMessage()));
@@ -628,23 +632,14 @@ public class GeyserSession implements CommandSender {
         windowCache.showWindow(window, id);
     }
 
-    public void setServerRenderDistance(int serverRenderDistance) {
-        serverRenderDistance = GenericMath.ceil(++serverRenderDistance * MathUtils.SQRT_OF_TWO); //square to circle
-        if (serverRenderDistance > 32) serverRenderDistance = 32; // <3 u ViaVersion but I don't like crashing clients x)
-        this.serverRenderDistance = serverRenderDistance;
+    public void setRenderDistance(int renderDistance) {
+        renderDistance = GenericMath.ceil(++renderDistance * MathUtils.SQRT_OF_TWO); //square to circle
+        if (renderDistance > 32) renderDistance = 32; // <3 u ViaVersion but I don't like crashing clients x)
+        this.renderDistance = renderDistance;
 
         ChunkRadiusUpdatedPacket chunkRadiusUpdatedPacket = new ChunkRadiusUpdatedPacket();
-        chunkRadiusUpdatedPacket.setRadius(getRenderDistance());
+        chunkRadiusUpdatedPacket.setRadius(renderDistance);
         upstream.sendPacket(chunkRadiusUpdatedPacket);
-    }
-
-    /**
-     * This returns the smallest render distance between the server or client
-     *
-     * @return The render distance as an int
-     */
-    public int getRenderDistance() {
-        return Math.min(clientRenderDistance, serverRenderDistance);
     }
 
     public InetSocketAddress getSocketAddress() {
@@ -876,6 +871,10 @@ public class GeyserSession implements CommandSender {
         // Required to make command blocks destroyable
         adventureSettingsPacket.setPlayerPermission(opPermissionLevel >= 2 ? PlayerPermission.OPERATOR : PlayerPermission.MEMBER);
 
+        // Update the noClip and worldImmutable values based on the current gamemode
+        noClip = gameMode == GameMode.SPECTATOR;
+        worldImmutable = gameMode == GameMode.ADVENTURE || gameMode == GameMode.SPECTATOR;
+
         Set<AdventureSetting> flags = new HashSet<>();
         if (canFly) {
             flags.add(AdventureSetting.MAY_FLY);
@@ -926,90 +925,4 @@ public class GeyserSession implements CommandSender {
     public void unregisterPluginChannel(String channel) {
         sendDownstreamPacket(new ClientPluginMessagePacket("minecraft:unregister", channel.getBytes()));
 	}
-
-	/**
-     * Updates the stored bounding box
-     * @param position The new position of the player
-     */
-    public void updatePlayerBoundingBox(Vector3f position) {
-        updatePlayerBoundingBox(Vector3d.from(position.getX(), position.getY(), position.getZ()));
-    }
-
-    /**
-     * Updates the stored bounding box
-     * @param position The new position of the player
-     */
-    public void updatePlayerBoundingBox(Vector3d position) {
-        if (playerBoundingBox == null) {
-            System.out.println("BBnull");
-            playerBoundingBox = new BoundingBox(position.getX(), position.getY() + 0.9, position.getZ(), 0.6, 1.8, 0.6);
-        } else {
-            // TODO: Make bounding box smaller when sneaking
-            playerBoundingBox.setMiddleX(position.getX());
-            playerBoundingBox.setMiddleY(position.getY() + 0.9); // (EntityType.PLAYER.getOffset() / 2));
-            // System.out.println("Offset: " + (EntityType.PLAYER.getOffset() / 2));
-            playerBoundingBox.setMiddleZ(position.getZ());
-        }
-    }
-
-    public static final double COLLISION_TOLERANCE = 0.000001; // TODO: Move?
-
-    public List<Vector3i> getPlayerCollidableBlocks() {
-        List<Vector3i> blocks = new ArrayList<>();
-
-        Vector3d position = Vector3d.from(playerBoundingBox.getMiddleX(),
-                playerBoundingBox.getMiddleY() - 0.9,
-                playerBoundingBox.getMiddleZ());
-
-        // Loop through all blocks that could collide with the player
-        int minCollisionX = (int) Math.floor(position.getX() - ((playerBoundingBox.getSizeX() / 2) + COLLISION_TOLERANCE));
-        int maxCollisionX = (int) Math.floor(position.getX() + (playerBoundingBox.getSizeX() / 2) + COLLISION_TOLERANCE);
-
-        // Y extends 0.5 blocks down because of fence hitboxes
-        int minCollisionY = (int) Math.floor(position.getY() - 0.5);
-
-        // TODO: change comment
-        // Hitbox height is currently set to 0.5 to improve performance, as only blocks below the player need checking
-        // Any lower seems to cause issues
-        int maxCollisionY = (int) Math.floor(position.getY() + playerBoundingBox.getSizeY());
-
-        int minCollisionZ = (int) Math.floor(position.getZ() - ((playerBoundingBox.getSizeZ() / 2) + COLLISION_TOLERANCE));
-        int maxCollisionZ = (int) Math.floor(position.getZ() + (playerBoundingBox.getSizeZ() / 2) + COLLISION_TOLERANCE);
-
-        // BlockCollision blockCollision;
-
-        for (int y = minCollisionY; y < maxCollisionY + 1; y++) {
-            for (int x = minCollisionX; x < maxCollisionX + 1; x++) {
-                for (int z = minCollisionZ; z < maxCollisionZ + 1; z++) {
-                    blocks.add(Vector3i.from(x, y, z));
-                }
-            }
-        }
-
-        return blocks;
-    }
-
-    public void correctPlayerPosition() {
-        List<Vector3i> collidableBlocks = getPlayerCollidableBlocks();
-
-        // Used when correction code needs to be run before the main correction
-        for (Vector3i blockPos : collidableBlocks) {
-            BlockCollision blockCollision = CollisionTranslator.getCollisionAt(
-                    blockPos.getX(), blockPos.getY(), blockPos.getZ(), this
-            );
-            if (blockCollision != null) {
-                blockCollision.beforeCorrectPosition(playerBoundingBox);
-            }
-        }
-
-        // Main correction code
-        for (Vector3i blockPos : collidableBlocks) {
-            BlockCollision blockCollision = CollisionTranslator.getCollisionAt(
-                    blockPos.getX(), blockPos.getY(), blockPos.getZ(), this
-            );
-            if (blockCollision != null) {
-                blockCollision.correctPosition(playerBoundingBox);
-            }
-        }
-    }
 }
