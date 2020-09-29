@@ -5,13 +5,16 @@
 
 ## This branch is a combination of many different geyser forks
 - Don't message geyser devs if you find a problem
-- Create a issue on my fork I will try and fix it
+- Create a issue on my fork I will try and fix it (https://github.com/Hellohi3654/Geyser/issues)
 - You can either compile this branch yourself or download the lastest release (https://github.com/Hellohi3654/Geyser/releases)
 - Here's a list of features this branch includes:
-  - Custom Skulls (https://github.com/OnlyBMan/Geyser/tree/custom-skulls)
-  - Resources Pack Loading (https://github.com/GeyserMC/Geyser/tree/resources)
-  - Pull requests from the master branch that fix bugs and optimise Geyser (https://github.com/GeyserMC/Geyser/pulls)
-  - Other random bug fixes from other users forks (https://github.com/GeyserMC/Geyser/network/members) mainly the contributors (https://github.com/GeyserMC/Geyser/graphs/contributors)
+* [Replace Spaces in Usernames with Underscores](https://github.com/GeyserMC/Geyser/pull/264)
+* [Custom Skulls](https://github.com/GeyserMC/Geyser/pull/683)
+* [Move Fixes](https://github.com/GeyserMC/Geyser/pull/699)
+* [Improve Playerlist](https://github.com/GeyserMC/Geyser/pull/711)
+* [Native Geyser Extension Support](https://github.com/GeyserMC/Geyser/pull/742)
+* [Improved Login Process](https://github.com/GeyserMC/Geyser/pull/1184)
+* [Remove 'geyser' from commands fix](https://github.com/GeyserMC/Geyser/pull/1266)
 
 <img src="https://geysermc.org/img/geyser-1760-860.png" alt="Geyser" width="600"/>
 

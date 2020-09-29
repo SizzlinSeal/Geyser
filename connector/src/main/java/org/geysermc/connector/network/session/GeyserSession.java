@@ -49,6 +49,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.data.*;
 import com.nukkitx.protocol.bedrock.data.command.CommandPermission;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
 import com.nukkitx.protocol.bedrock.packet.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -99,6 +100,8 @@ import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -124,8 +127,8 @@ public class GeyserSession implements CommandSender {
     private InventoryCache inventoryCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
-    private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
+    private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
 
     @Getter
     private final Long2ObjectMap<ClientboundMapItemDataPacket> storedMaps = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
@@ -335,7 +338,7 @@ public class GeyserSession implements CommandSender {
 
         PlayerListPacket playerListPacket = new PlayerListPacket();
         playerListPacket.setAction(PlayerListPacket.Action.ADD);
-        playerListPacket.getEntries().add(SkinUtils.buildCachedEntry(this, playerEntity.getProfile(), playerEntity.getGeyserId()));
+        playerListPacket.getEntries().add(SkinUtils.buildCachedEntry(this, playerEntity));
         sendUpstreamPacket(playerListPacket);
 
         startGame();
@@ -370,7 +373,7 @@ public class GeyserSession implements CommandSender {
         // Don't let the client modify the inventory on death
         // Setting this to true allows keep inventory to work if enabled but doesn't break functionality being false
         gamerulePacket.getGameRules().add(new GameRuleData<>("keepinventory", true));
-        upstream.sendPacket(gamerulePacket);
+        sendUpstreamPacket(gamerulePacket);
 
         // Spawn the player
         PlayStatusPacket playStatusPacket = new PlayStatusPacket();
@@ -408,9 +411,9 @@ public class GeyserSession implements CommandSender {
         new Thread(() -> {
             try {
                 if (password != null && !password.isEmpty()) {
-                    protocol = new MinecraftProtocol(username, password);
+                    protocol = new MinecraftProtocol(username.replace(" ","_"), password);
                 } else {
-                    protocol = new MinecraftProtocol(username);
+                    protocol = new MinecraftProtocol(username.replace(" ","_"));
                 }
 
                 boolean floodgate = connector.getAuthType() == AuthType.FLOODGATE;
@@ -496,6 +499,16 @@ public class GeyserSession implements CommandSender {
                                 }
                                 entity.spawnEntity(GeyserSession.this);
                             }
+                        }
+
+                        // Send Skulls
+                        for (PlayerEntity entity : getSkullCache().values()) {
+                            entity.spawnEntity(GeyserSession.this);
+
+                            SkinUtils.requestAndHandleSkinAndCape(entity, GeyserSession.this, (skinAndCape) -> getConnector().getGeneralThreadPool().schedule(() -> {
+                                entity.getMetadata().getFlags().setFlag(EntityFlag.INVISIBLE, false);
+                                entity.updateBedrockMetadata(GeyserSession.this);
+                            }, 2, TimeUnit.SECONDS));
                         }
 
                         // Register plugin channels

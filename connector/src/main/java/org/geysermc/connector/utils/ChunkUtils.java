@@ -82,7 +82,6 @@ public class ChunkUtils {
     }
 
     public static ChunkData translateToBedrock(GeyserSession session, Column column, boolean isNonFullChunk) {
-
         ChunkData chunkData = new ChunkData();
         Chunk[] chunks = column.getChunks();
         chunkData.sections = new ChunkSection[chunks.length];

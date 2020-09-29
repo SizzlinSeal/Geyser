@@ -241,7 +241,7 @@ public class SkinUtils {
                                 PlayerListPacket.Entry updatedEntry = buildEntryManually(
                                         session,
                                         entity.getUuid(),
-                                        entity.getUsername(),
+                                        entity.getName(),
                                         entity.getGeyserId(),
                                         skin.getTextureUrl(),
                                         skin.getSkinData(),
