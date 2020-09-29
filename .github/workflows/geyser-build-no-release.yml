@@ -1,6 +1,3 @@
-# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
-# For more information see: https://github.com/actions/setup-java#apache-maven-with-a-settings-path
-
 name: Geyser Build No Release
 
 on:
@@ -51,3 +48,21 @@ jobs:
       with:
           name: Geyser Spigot
           path: bootstrap/spigot/target/Geyser-Spigot.jar
+    - name: Archive artifacts (Geyser BungeeCord)
+      uses: actions/upload-artifact@v2
+      if: success()
+      with:
+        name: Geyser BungeeCord
+        path: bootstrap/bungeecord/target/Geyser-BungeeCord.jar
+    - name: Archive artifacts (Geyser Sponge)
+      uses: actions/upload-artifact@v2
+      if: success()
+      with:
+        name: Geyser Sponge
+        path: bootstrap/sponge/target/Geyser-Sponge.jar
+    - name: Archive artifacts (Geyser Velocity)
+      uses: actions/upload-artifact@v2
+      if: success()
+      with:
+        name: Geyser Velocity
+        path: bootstrap/velocity/target/Geyser-Velocity.jar
