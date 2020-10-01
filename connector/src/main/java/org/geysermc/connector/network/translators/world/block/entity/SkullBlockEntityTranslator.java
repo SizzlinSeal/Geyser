@@ -65,6 +65,14 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         if (skullVariant == -1) skullVariant = 0;
         tags.put("Rotation", rotation);
         tags.put("SkullType", skullVariant);
+	    
+	    		try{
+			Thread.sleep(400);
+			}
+			catch(InterruptedException ex) {
+			Thread.currentThread().interrupt();
+			}
+	    
         return tags;
     }
 
@@ -84,7 +92,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
             gameProfile.setProperties(properties);
 			
 			try{
-			Thread.sleep(2000);
+			Thread.sleep(400);
 			}
 			catch(InterruptedException ex) {
 			Thread.currentThread().interrupt();
