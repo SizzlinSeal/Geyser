@@ -67,7 +67,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         tags.put("SkullType", skullVariant);
 	    
 	    		try{
-			Thread.sleep(400);
+			Thread.sleep(200);
 			}
 			catch(InterruptedException ex) {
 			Thread.currentThread().interrupt();
