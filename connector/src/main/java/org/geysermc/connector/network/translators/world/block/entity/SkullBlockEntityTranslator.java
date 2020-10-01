@@ -82,8 +82,8 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
             GameProfile gameProfile = new GameProfile(UUID.randomUUID(), "");
             properties.add(new GameProfile.Property("textures", texture.getValue()));
             gameProfile.setProperties(properties);
+			TimeUnit.SECONDS.sleep(2);
             return gameProfile;
-			Thread.sleep(2000);
         }
         return null;
     }
