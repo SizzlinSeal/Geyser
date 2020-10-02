@@ -67,7 +67,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         tags.put("SkullType", skullVariant);
 	    
 	    		try{
-			Thread.sleep(200);
+			Thread.sleep(250);
 			}
 			catch(InterruptedException ex) {
 			Thread.currentThread().interrupt();
@@ -90,14 +90,6 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
             GameProfile gameProfile = new GameProfile(UUID.randomUUID(), "");
             properties.add(new GameProfile.Property("textures", texture.getValue()));
             gameProfile.setProperties(properties);
-			
-			try{
-			Thread.sleep(400);
-			}
-			catch(InterruptedException ex) {
-			Thread.currentThread().interrupt();
-			}
-			
             return gameProfile;
         }
         return null;
