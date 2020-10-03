@@ -120,5 +120,7 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
 
         session.addTeleport(new TeleportCache(newX, newY, newZ, newPitch, newYaw, packet.getTeleportId()));
         entity.moveAbsolute(session, Vector3f.from(newX, newY, newZ), (float) newYaw, (float) newPitch, true, true);
+        ClientTeleportConfirmPacket teleportConfirmPacket = new ClientTeleportConfirmPacket(packet.getTeleportId());
+        session.sendDownstreamPacket(teleportConfirmPacket);
     }
 }
