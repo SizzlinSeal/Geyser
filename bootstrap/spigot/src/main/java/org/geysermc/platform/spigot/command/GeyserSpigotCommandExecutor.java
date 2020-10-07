@@ -59,11 +59,11 @@ public class GeyserSpigotCommandExecutor implements TabExecutor {
                     sender.sendMessage(ChatColor.RED + message);
                     return true;
                 }
-                getCommand(args[0]).execute(new SpigotCommandSender(sender), Arrays.copyOfRange(args, 1, args.length-1));
+                getCommand(args[0]).execute(new SpigotCommandSender(sender), args);
                 return true;
             }
         } else {
-            getCommand("help").execute(new SpigotCommandSender(sender), Arrays.copyOfRange(args, 1, args.length-1));
+            getCommand("help").execute(new SpigotCommandSender(sender), args);
             return true;
         }
         return true;
