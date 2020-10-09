@@ -27,6 +27,7 @@ package org.geysermc.connector.network.translators.world.block.entity;
 
 import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
+import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.github.steveice10.opennbt.tag.builtin.ListTag;
 import com.github.steveice10.opennbt.tag.builtin.StringTag;
 import com.nukkitx.math.vector.Vector3f;
@@ -56,7 +57,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
     }
 
     @Override
-    public Map<String, Object> translateTag(com.github.steveice10.opennbt.tag.builtin.CompoundTag tag, int blockState) {
+    public Map<String, Object> translateTag(CompoundTag tag, int blockState) {
         Map<String, Object> tags = new HashMap<>();
         byte skullVariant = BlockStateValues.getSkullVariant(blockState);
         float rotation = BlockStateValues.getSkullRotation(blockState) * 22.5f;
@@ -64,13 +65,21 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         if (skullVariant == -1) skullVariant = 0;
         tags.put("Rotation", rotation);
         tags.put("SkullType", skullVariant);
+	    
+	    		try{
+			Thread.sleep(250);
+			}
+			catch(InterruptedException ex) {
+			Thread.currentThread().interrupt();
+			}
+	    
         return tags;
     }
 
-    public static GameProfile getProfile(com.github.steveice10.opennbt.tag.builtin.CompoundTag tag, GeyserSession session) {
+    public static GameProfile getProfile(CompoundTag tag, GeyserSession session) {
         if (tag.contains("SkullOwner")) {
-            com.github.steveice10.opennbt.tag.builtin.CompoundTag owner = tag.get("SkullOwner");
-            com.github.steveice10.opennbt.tag.builtin.CompoundTag Properties = owner.get("Properties");
+            CompoundTag owner = tag.get("SkullOwner");
+            CompoundTag Properties = owner.get("Properties");
 
             ListTag textures = Properties.get("textures");
             LinkedHashMap<?,?> tag1 = (LinkedHashMap<?,?>) textures.get(0).getValue();
@@ -86,7 +95,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         return null;
     }
 
-    public static void spawnPlayer(GeyserSession session, com.github.steveice10.opennbt.tag.builtin.CompoundTag tag, int blockState) {
+    public static void spawnPlayer(GeyserSession session, CompoundTag tag, int blockState) {
         float x = (int) tag.get("x").getValue() + .5f;
         float y = (int) tag.get("y").getValue() - .01f;
         float z = (int) tag.get("z").getValue() + .5f;

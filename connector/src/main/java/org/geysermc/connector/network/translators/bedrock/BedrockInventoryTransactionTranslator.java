@@ -31,6 +31,7 @@ import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
 import com.github.steveice10.mc.protocol.data.game.entity.player.Hand;
 import com.github.steveice10.mc.protocol.data.game.entity.player.InteractAction;
 import com.github.steveice10.mc.protocol.data.game.entity.player.PlayerAction;
+import com.github.steveice10.mc.protocol.data.game.window.WindowType;
 import com.github.steveice10.mc.protocol.data.game.world.block.BlockFace;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerActionPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerInteractEntityPacket;
@@ -54,10 +55,12 @@ import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslator;
 import org.geysermc.connector.network.translators.Translator;
 import org.geysermc.connector.network.translators.inventory.InventoryTranslator;
+import org.geysermc.connector.network.translators.inventory.SmithingInventoryTranslator;
 import org.geysermc.connector.network.translators.item.ItemEntry;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.network.translators.sound.EntitySoundInteractionHandler;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
+import org.geysermc.connector.utils.BlockUtils;
 import org.geysermc.connector.utils.InventoryUtils;
 
 @Translator(packet = InventoryTransactionPacket.class)
@@ -74,6 +77,14 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
             case INVENTORY_MISMATCH:
                 Inventory inv = session.getInventoryCache().getOpenInventory();
                 if (inv == null) inv = session.getInventory();
+                if (inv.getWindowType() != null && inv.getWindowType() == WindowType.SMITHING) {
+                    if (inv.getItem(0).getId() != 0 && inv.getItem(1).getId() != 0 && inv.getItem(2).getId() != 0) {
+                        // Hack in legacy support for getting items from the smithing table
+                        // For some reason inventory mismatch is called when using client authoritative inventories
+                        SmithingInventoryTranslator.receiveItem(session, inv);
+                        break;
+                    }
+                }
                 InventoryTranslator.INVENTORY_TRANSLATORS.get(inv.getWindowType()).updateInventory(session, inv);
                 InventoryUtils.updateCursor(session);
                 break;
@@ -151,28 +162,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        Vector3i blockPos = packet.getBlockPosition();
-                        // TODO: Find a better way to do this?
-                        switch (packet.getBlockFace()) {
-                            case 0:
-                                blockPos = blockPos.sub(0, 1, 0);
-                                break;
-                            case 1:
-                                blockPos = blockPos.add(0, 1, 0);
-                                break;
-                            case 2:
-                                blockPos = blockPos.sub(0, 0, 1);
-                                break;
-                            case 3:
-                                blockPos = blockPos.add(0, 0, 1);
-                                break;
-                            case 4:
-                                blockPos = blockPos.sub(1, 0, 0);
-                                break;
-                            case 5:
-                                blockPos = blockPos.add(1, 0, 0);
-                                break;
-                        }
+                        Vector3i blockPos = BlockUtils.getBlockPosition(packet.getBlockPosition(), packet.getBlockFace());
                         ItemEntry handItem = ItemRegistry.getItem(packet.getItemInHand());
                         if (handItem.isBlock()) {
                             session.setLastBlockPlacePosition(blockPos);

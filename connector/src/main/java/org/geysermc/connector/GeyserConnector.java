@@ -79,7 +79,9 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public class GeyserConnector {
 
-    public static final ObjectMapper JSON_MAPPER = new ObjectMapper().enable(JsonParser.Feature.IGNORE_UNDEFINED).enable(JsonParser.Feature.ALLOW_COMMENTS).disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    public static final ObjectMapper JSON_MAPPER = new ObjectMapper()
+            .enable(JsonParser.Feature.IGNORE_UNDEFINED).enable(JsonParser.Feature.ALLOW_COMMENTS).disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES);
 
     public static final String NAME = "Geyser";
     public static final String VERSION = "DEV"; // A fallback for running in IDEs
@@ -334,15 +336,16 @@ public class GeyserConnector {
     }
 
     /**
-     * Get the production status of the current runtime.
-     * Will return true if the version number is not 'DEV'.
-     * Should only happen in compiled jars.
+     * Whether to use XML reflections in the jar or manually find the reflections.
+     * Will return true if the version number is not 'DEV' and the platform is not Fabric.
+     * On Fabric - it complains about being unable to create a default XMLReader.
+     * On other platforms this should only be true in compiled jars.
      *
-     * @return If we are in a production build/environment
+     * @return whether to use XML reflections
      */
-    public boolean isProduction() {
+    public boolean useXmlReflections() {
         //noinspection ConstantConditions
-        return !"DEV".equals(GeyserConnector.VERSION);
+        return !this.getPlatformType().equals(PlatformType.FABRIC) && !"DEV".equals(GeyserConnector.VERSION);
     }
 
     /**

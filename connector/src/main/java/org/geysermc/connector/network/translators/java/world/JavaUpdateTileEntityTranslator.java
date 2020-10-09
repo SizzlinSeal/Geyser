@@ -59,6 +59,12 @@ public class JavaUpdateTileEntityTranslator extends PacketTranslator<ServerUpdat
                 CompoundTag owner = packet.getNbt().get("SkullOwner");
                 if (owner.contains("Properties")) {
                     SkullBlockEntityTranslator.spawnPlayer(session, packet.getNbt(), blockState);
+                    try {
+			        Thread.sleep(150);
+			        }
+			        catch(InterruptedException ex) {
+			        Thread.currentThread().interrupt();
+			        }
                 }
             }
             BlockEntityUtils.updateBlockEntity(session, translator.getBlockEntityTag(id, packet.getNbt(),

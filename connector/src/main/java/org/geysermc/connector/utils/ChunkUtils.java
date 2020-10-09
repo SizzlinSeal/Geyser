@@ -82,7 +82,6 @@ public class ChunkUtils {
     }
 
     public static ChunkData translateToBedrock(GeyserSession session, Column column, boolean isNonFullChunk) {
-
         ChunkData chunkData = new ChunkData();
         Chunk[] chunks = column.getChunks();
         chunkData.sections = new ChunkSection[chunks.length];
@@ -179,6 +178,12 @@ public class ChunkUtils {
                 CompoundTag owner = tag.get("SkullOwner");
                 if (owner.contains("Properties")) {
                     SkullBlockEntityTranslator.spawnPlayer(session, tag, blockState);
+                    try {
+			        Thread.sleep(150);
+			        }
+			        catch(InterruptedException ex) {
+			        Thread.currentThread().interrupt();
+			        }
                 }
             }
             i++;

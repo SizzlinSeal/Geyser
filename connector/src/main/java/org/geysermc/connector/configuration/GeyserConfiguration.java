@@ -78,10 +78,10 @@ public interface GeyserConfiguration {
     boolean isAboveBedrockNetherBuilding();
 
     boolean isCacheChunks();
-    
-    boolean isAllowCustomSkulls();
 
     boolean isForceResourcePacks();
+
+    boolean isAllowCustomSkulls();
 
     int getCacheImages();
 
@@ -107,7 +107,7 @@ public interface GeyserConfiguration {
         String getAddress();
 
         int getPort();
-        
+
         void setAddress(String address);
 
         void setPort(int port);
