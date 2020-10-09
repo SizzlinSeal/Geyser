@@ -23,43 +23,27 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.connector.network.session.cache;
+package org.geysermc.connector.entity.living.monster.raid;
 
-import com.nukkitx.math.vector.Vector3d;
+import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
 import com.nukkitx.math.vector.Vector3f;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import org.geysermc.connector.entity.type.EntityType;
+import org.geysermc.connector.network.session.GeyserSession;
 
-@RequiredArgsConstructor
-@Data
-public class TeleportCache {
+public class PillagerEntity extends AbstractIllagerEntity {
 
-    private static final double ERROR = 0.1;
-    private static final double ERROR_Y = 0.1;
-
-    private int unconfirmedFor = 0;
-
-    /**
-     * How many move packets the teleport can be unconfirmed for before it gets resent to the client
-     */
-     private static final int RESEND_THRESHOLD = 5;
-
-    private final double x, y, z;
-    private final double pitch, yaw;
-    private final int teleportConfirmId;
-
-    public boolean canConfirm(Vector3d position) {
-        return (Math.abs(this.x - position.getX()) < ERROR &&
-                Math.abs(this.y - position.getY()) < ERROR_Y &&
-                Math.abs(this.z - position.getZ()) < ERROR);
+    public PillagerEntity(long entityId, long geyserId, EntityType entityType, Vector3f position, Vector3f motion, Vector3f rotation) {
+        super(entityId, geyserId, entityType, position, motion, rotation);
     }
 
-    public void incrementUnconfirmedFor() {
-        unconfirmedFor++;
-    }
-
-    public boolean shouldResend() {
-        return unconfirmedFor >= RESEND_THRESHOLD;
+    @Override
+    public void updateBedrockMetadata(EntityMetadata entityMetadata, GeyserSession session) {
+        if (entityMetadata.getId() == 16) {
+            // Java Edition always has the Pillager entity as positioning the crossbow
+            metadata.getFlags().setFlag(EntityFlag.USING_ITEM, true);
+            metadata.getFlags().setFlag(EntityFlag.CHARGED, true);
+        }
+        super.updateBedrockMetadata(entityMetadata, session);
     }
 }
