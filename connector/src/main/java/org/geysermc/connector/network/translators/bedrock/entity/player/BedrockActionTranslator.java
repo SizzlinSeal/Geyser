@@ -48,6 +48,7 @@ import org.geysermc.connector.utils.BoundingBox;
 import org.geysermc.connector.utils.BlockUtils;
 
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
 
 @Translator(packet = PlayerActionPacket.class)
 public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket> {
