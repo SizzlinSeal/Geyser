@@ -67,6 +67,7 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
 
         switch (packet.getAction()) {
             case RESPAWN:
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 // Respawn process is finished and the server and client are both OK with respawning.
                 EntityEventPacket eventPacket = new EntityEventPacket();
                 eventPacket.setRuntimeEntityId(entity.getGeyserId());
@@ -107,20 +108,24 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 session.setSneaking(false);
                 break;
             case START_SPRINT:
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket startSprintPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_SPRINTING);
                 session.sendDownstreamPacket(startSprintPacket);
                 session.setSprinting(true);
                 break;
             case STOP_SPRINT:
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSprintPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.STOP_SPRINTING);
                 session.sendDownstreamPacket(stopSprintPacket);
                 session.setSprinting(false);
                 break;
             case DROP_ITEM:
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerActionPacket dropItemPacket = new ClientPlayerActionPacket(PlayerAction.DROP_ITEM, position, BlockFace.values()[packet.getFace()]);
                 session.sendDownstreamPacket(dropItemPacket);
                 break;
             case STOP_SLEEP:
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSleepingPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.LEAVE_BED);
                 session.sendDownstreamPacket(stopSleepingPacket);
                 break;
@@ -160,6 +165,7 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 // Handled in BedrockInventoryTransactionTranslator
                 break;
             case DIMENSION_CHANGE_SUCCESS:
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 if (session.getPendingDimSwitches().decrementAndGet() == 0) {
                     //sometimes the client doesn't feel like loading
                     PlayStatusPacket spawnPacket = new PlayStatusPacket();
