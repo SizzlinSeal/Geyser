@@ -51,6 +51,7 @@ public class CollisionManager {
 
     public CollisionManager(GeyserSession session) {
         this.session = session;
+        this.playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
     }
 
     /**
