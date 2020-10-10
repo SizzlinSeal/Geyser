@@ -60,9 +60,8 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
 
         Vector3i vector = packet.getBlockPosition();
         Position position = new Position(vector.getX(), vector.getY(), vector.getZ());
-        
-        @Getter
-        private BoundingBox boundingBox;
+       
+        public BoundingBox boundingBox;
 
         switch (packet.getAction()) {
             case RESPAWN:
