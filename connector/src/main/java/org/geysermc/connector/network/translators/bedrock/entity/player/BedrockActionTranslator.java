@@ -51,6 +51,9 @@ import java.util.concurrent.TimeUnit;
 
 @Translator(packet = PlayerActionPacket.class)
 public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket> {
+    
+    @Getter
+    private BoundingBox playerBoundingBox;
 
     @Override
     public void translate(PlayerActionPacket packet, GeyserSession session) {
@@ -60,8 +63,6 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
 
         Vector3i vector = packet.getBlockPosition();
         Position position = new Position(vector.getX(), vector.getY(), vector.getZ());
-       
-        public BoundingBox boundingBox;
 
         switch (packet.getAction()) {
             case RESPAWN:
@@ -73,33 +74,33 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 session.sendUpstreamPacket(eventPacket);
                 break;
             case START_SWIMMING:
-                boundingBox = new BoundingBox(0, 0, 0, 0.6, 0.6, 0.6);
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 0.6, 0.6);
                 ClientPlayerStatePacket startSwimPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_SPRINTING);
                 session.sendDownstreamPacket(startSwimPacket);
                 break;
             case STOP_SWIMMING:
-                boundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSwimPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.STOP_SPRINTING);
                 session.sendDownstreamPacket(stopSwimPacket);
                 break;
             case START_GLIDE:
-                boundingBox = new BoundingBox(0, 0, 0, 0.6, 0.6, 0.6);
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 0.6, 0.6);
                 // Otherwise gliding will not work in creative
                 ClientPlayerAbilitiesPacket playerAbilitiesPacket = new ClientPlayerAbilitiesPacket(false);
                 session.sendDownstreamPacket(playerAbilitiesPacket);
             case STOP_GLIDE:
-                boundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket glidePacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_ELYTRA_FLYING);
                 session.sendDownstreamPacket(glidePacket);
                 break;
             case START_SNEAK:
-                boundingBox = new BoundingBox(0, 0, 0, 0.6, 1.5, 0.6);
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.5, 0.6);
                 ClientPlayerStatePacket startSneakPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_SNEAKING);
                 session.sendDownstreamPacket(startSneakPacket);
                 session.setSneaking(true);
                 break;
             case STOP_SNEAK:
-                boundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
+                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSneakPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.STOP_SNEAKING);
                 session.sendDownstreamPacket(stopSneakPacket);
                 session.setSneaking(false);
