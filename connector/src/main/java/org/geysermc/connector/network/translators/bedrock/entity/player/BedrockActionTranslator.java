@@ -44,17 +44,12 @@ import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslator;
 import org.geysermc.connector.network.translators.Translator;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
-import org.geysermc.connector.utils.BoundingBox;
 import org.geysermc.connector.utils.BlockUtils;
 
 import java.util.concurrent.TimeUnit;
-import lombok.Getter;
 
 @Translator(packet = PlayerActionPacket.class)
 public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket> {
-    
-    @Getter
-    private BoundingBox playerBoundingBox;
 
     @Override
     public void translate(PlayerActionPacket packet, GeyserSession session) {
@@ -67,7 +62,6 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
 
         switch (packet.getAction()) {
             case RESPAWN:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 // Respawn process is finished and the server and client are both OK with respawning.
                 EntityEventPacket eventPacket = new EntityEventPacket();
                 eventPacket.setRuntimeEntityId(entity.getGeyserId());
@@ -76,56 +70,46 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 session.sendUpstreamPacket(eventPacket);
                 break;
             case START_SWIMMING:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 0.6, 0.6);
                 ClientPlayerStatePacket startSwimPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_SPRINTING);
                 session.sendDownstreamPacket(startSwimPacket);
                 break;
             case STOP_SWIMMING:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSwimPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.STOP_SPRINTING);
                 session.sendDownstreamPacket(stopSwimPacket);
                 break;
             case START_GLIDE:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 0.6, 0.6);
                 // Otherwise gliding will not work in creative
                 ClientPlayerAbilitiesPacket playerAbilitiesPacket = new ClientPlayerAbilitiesPacket(false);
                 session.sendDownstreamPacket(playerAbilitiesPacket);
             case STOP_GLIDE:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket glidePacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_ELYTRA_FLYING);
                 session.sendDownstreamPacket(glidePacket);
                 break;
             case START_SNEAK:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.5, 0.6);
                 ClientPlayerStatePacket startSneakPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_SNEAKING);
                 session.sendDownstreamPacket(startSneakPacket);
                 session.setSneaking(true);
                 break;
             case STOP_SNEAK:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSneakPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.STOP_SNEAKING);
                 session.sendDownstreamPacket(stopSneakPacket);
                 session.setSneaking(false);
                 break;
             case START_SPRINT:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket startSprintPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.START_SPRINTING);
                 session.sendDownstreamPacket(startSprintPacket);
                 session.setSprinting(true);
                 break;
             case STOP_SPRINT:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSprintPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.STOP_SPRINTING);
                 session.sendDownstreamPacket(stopSprintPacket);
                 session.setSprinting(false);
                 break;
             case DROP_ITEM:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerActionPacket dropItemPacket = new ClientPlayerActionPacket(PlayerAction.DROP_ITEM, position, BlockFace.values()[packet.getFace()]);
                 session.sendDownstreamPacket(dropItemPacket);
                 break;
             case STOP_SLEEP:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 ClientPlayerStatePacket stopSleepingPacket = new ClientPlayerStatePacket((int) entity.getEntityId(), PlayerState.LEAVE_BED);
                 session.sendDownstreamPacket(stopSleepingPacket);
                 break;
@@ -165,7 +149,6 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 // Handled in BedrockInventoryTransactionTranslator
                 break;
             case DIMENSION_CHANGE_SUCCESS:
-                playerBoundingBox = new BoundingBox(0, 0, 0, 0.6, 1.8, 0.6);
                 if (session.getPendingDimSwitches().decrementAndGet() == 0) {
                     //sometimes the client doesn't feel like loading
                     PlayStatusPacket spawnPacket = new PlayStatusPacket();
