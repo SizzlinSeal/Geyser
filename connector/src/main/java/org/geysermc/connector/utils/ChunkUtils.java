@@ -276,7 +276,7 @@ public class ChunkUtils {
                 if (owner.contains("Properties")) {
                     SkullBlockEntityTranslator.spawnPlayer(session, tag, blockState);
                     try {
-			        Thread.sleep(10);
+			        Thread.sleep(5);
 			        }
 			        catch(InterruptedException ex) {
 			        Thread.currentThread().interrupt();
