@@ -33,6 +33,7 @@ import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.data.SubProtocol;
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
 import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
+import com.github.steveice10.mc.protocol.data.game.statistic.Statistic;
 import com.github.steveice10.mc.protocol.data.game.window.VillagerTrade;
 import com.github.steveice10.mc.protocol.data.message.MessageSerializer;
 import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket;
@@ -61,6 +62,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.geysermc.common.window.CustomFormWindow;
 import org.geysermc.common.window.FormWindow;
@@ -304,6 +306,18 @@ public class GeyserSession implements CommandSender {
      */
     @Setter
     private String lastSignMessage;
+
+    /**
+     * Stores a map of all statistics sent from the server.
+     * The server only sends new statistics back to us, so in order to show all statistics we need to cache existing ones.
+     */
+    private final Map<Statistic, Integer> statistics = new HashMap<>();
+
+    /**
+     * Whether we're expecting statistics to be sent back to us.
+     */
+    @Setter
+    private boolean waitingForStatistics = false;
 
     @Setter
     private List<UUID> selectedEmotes = new ArrayList<>();
@@ -927,8 +941,17 @@ public class GeyserSession implements CommandSender {
         adventureSettingsPacket.getSettings().addAll(flags);
         sendUpstreamPacket(adventureSettingsPacket);
     }
-	
-	public void refreshEmotes(List<UUID> emotes) {
+
+    /**
+     * Used for updating statistic values since we only get changes from the server
+     *
+     * @param statistics Updated statistics values
+     */
+    public void updateStatistics(@NonNull Map<Statistic, Integer> statistics) {
+        this.statistics.putAll(statistics);
+    }
+
+    public void refreshEmotes(List<UUID> emotes) {
         this.selectedEmotes = emotes;
         this.emotes.addAll(emotes);
         for (GeyserSession player : connector.getPlayers()) {
