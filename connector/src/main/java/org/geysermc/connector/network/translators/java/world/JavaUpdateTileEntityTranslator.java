@@ -60,7 +60,7 @@ public class JavaUpdateTileEntityTranslator extends PacketTranslator<ServerUpdat
                 if (owner.contains("Properties")) {
                     SkullBlockEntityTranslator.spawnPlayer(session, packet.getNbt(), blockState);
                     try {
-			        Thread.sleep(250);
+			        Thread.sleep(100);
 			        }
 			        catch(InterruptedException ex) {
 			        Thread.currentThread().interrupt();
