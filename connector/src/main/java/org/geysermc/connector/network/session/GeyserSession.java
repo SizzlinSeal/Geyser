@@ -350,13 +350,14 @@ public class GeyserSession implements CommandSender {
 
         this.inventoryCache.getInventories().put(0, inventory);
 		
-		connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
-
+	connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
+	    
         bedrockServerSession.addDisconnectHandler(disconnectReason -> {
-			connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
+	EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
+	connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
 
-            disconnect(disconnectReason.name());
-            connector.removePlayer(this);
+        disconnect(disconnectReason.name());
+        connector.removePlayer(this);
         });
     }
 
@@ -681,7 +682,7 @@ public class GeyserSession implements CommandSender {
 
         ChunkRadiusUpdatedPacket chunkRadiusUpdatedPacket = new ChunkRadiusUpdatedPacket();
         chunkRadiusUpdatedPacket.setRadius(renderDistance);
-        upstream.sendPacket(chunkRadiusUpdatedPacket);
+        sendUpstreamPacket(chunkRadiusUpdatedPacket);
     }
 
     public InetSocketAddress getSocketAddress() {
