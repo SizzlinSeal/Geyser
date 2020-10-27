@@ -23,22 +23,18 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.connector.common;
+package org.geysermc.connector.network.translators.bedrock;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.nukkitx.protocol.bedrock.packet.EmoteListPacket;
+import org.geysermc.connector.network.session.GeyserSession;
+import org.geysermc.connector.network.translators.PacketTranslator;
+import org.geysermc.connector.network.translators.Translator;
 
-@Getter
-@AllArgsConstructor
-public enum PlatformType {
+@Translator(packet = EmoteListPacket.class)
+public class BedrockEmoteListTranslator extends PacketTranslator<EmoteListPacket> {
 
-    ANDROID("Android"),
-    BUNGEECORD("BungeeCord"),
-    FABRIC("Fabric"),
-    SPIGOT("Spigot"),
-    SPONGE("Sponge"),
-    STANDALONE("Standalone"),
-    VELOCITY("Velocity");
-
-    private final String platformName;
+    @Override
+    public void translate(EmoteListPacket packet, GeyserSession session) {
+        session.refreshEmotes(packet.getPieceIds());
+    }
 }
