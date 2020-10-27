@@ -71,10 +71,10 @@ public class PlayerEntity extends LivingEntity {
     private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
     private final EntityEffectCache effectCache;
-	
-	private SkinProvider.SkinGeometry geometry;
 
     private GeyserSession session;
+	
+    private SkinProvider.SkinGeometry geometry;
 
     /**
      * Saves the parrot currently on the player's left shoulder; otherwise null
