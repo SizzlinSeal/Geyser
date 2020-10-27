@@ -32,6 +32,7 @@ import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.packet.MovePlayerPacket;
 import com.nukkitx.protocol.bedrock.packet.RespawnPacket;
 import com.nukkitx.protocol.bedrock.packet.SetEntityDataPacket;
+import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import org.geysermc.connector.entity.PlayerEntity;
 import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
@@ -49,6 +50,13 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
         PlayerEntity entity = session.getPlayerEntity();
         if (entity == null)
             return;
+        
+        if (!session.getUpstream().isInitialized()) {
+            // Spawn the player
+            PlayStatusPacket playStatusPacket = new PlayStatusPacket();
+            playStatusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
+            session.sendUpstreamPacket(playStatusPacket);
+        }
 
         if (!session.isLoggedIn())
             return;
