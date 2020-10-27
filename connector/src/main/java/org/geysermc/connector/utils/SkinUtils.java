@@ -138,20 +138,21 @@ public class SkinUtils {
                                             entity.getUsername(), false
                                     ), SkinProvider.EMPTY_CAPE, SkinProvider.CapeProvider.VALUES.length * 3);
                                 }
-                        }
+                            }
 
                         SkinProvider.SkinGeometry geometry = entity.getGeometry();
                             if (geometry == null) {
                                 geometry = SkinProvider.SkinGeometry.getLegacy(data.isAlex());
-                        }
+                            }
 
                         geometry = SkinProvider.getOrDefault(SkinProvider.requestBedrockGeometry(
                                 geometry, entity.getUuid(), false
                         ), geometry, 3);
 
-                        // Not a bedrock player check for ears
-                        if (geometry.isFailed() && SkinProvider.ALLOW_THIRD_PARTY_EARS) {
-                            boolean isEars;
+
+                            // Not a bedrock player check for ears
+                            if (geometry.isFailed() && SkinProvider.ALLOW_THIRD_PARTY_EARS) {
+                                boolean isEars ;
 
                             // Its deadmau5, gotta support his skin :)
                             if (entity.getUuid().toString().equals("1e18d5ff-643d-45c8-b509-43b8461d8614")) {
@@ -182,7 +183,7 @@ public class SkinUtils {
                             PlayerListPacket.Entry updatedEntry = buildEntryManually(
                                     session,
                                     entity.getUuid(),
-                                    entity.getUsername(),
+                                    entity.getName(),
                                     entity.getGeyserId(),
                                     skin.getTextureUrl(),
                                     skin.getSkinData(),
@@ -217,6 +218,10 @@ public class SkinUtils {
     }
 
     public static void handleBedrockSkin(PlayerEntity playerEntity, BedrockClientData clientData) {
+        if (EventManager.getInstance().triggerEvent(new LoadBedrockSkinEvent(playerEntity, clientData)).getEvent().isCancelled()) {
+            return;
+        }
+
         GeyserConnector.getInstance().getLogger().info(LanguageUtils.getLocaleStringLog("geyser.skin.bedrock.register", playerEntity.getUsername(), playerEntity.getUuid()));
 
         try {

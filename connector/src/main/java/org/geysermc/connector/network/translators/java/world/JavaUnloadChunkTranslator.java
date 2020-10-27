@@ -39,7 +39,6 @@ public class JavaUnloadChunkTranslator extends PacketTranslator<ServerUnloadChun
 
     @Override
     public void translate(ServerUnloadChunkPacket packet, GeyserSession session) {
-		
         session.getChunkCache().removeChunk(packet.getX(), packet.getZ());
 
         //Checks if a skull is in an unloaded chunk then removes it
