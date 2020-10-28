@@ -153,12 +153,8 @@ public class CollisionManager {
                     blockPos.getX(), blockPos.getY(), blockPos.getZ(), session
             );
             if (blockCollision != null) {
-                if (!blockCollision.correctPosition(playerBoundingBox)) {
-                    return false;
-                }
+                blockCollision.correctPosition(playerBoundingBox);
             }
         }
-
-        return true;
     }
 }
