@@ -154,12 +154,12 @@ public class BlockCollision {
     }
 
     // May be needed in the future
-    /* public boolean checkIntersection(BoundingBox playerCollision) {
+    public boolean checkIntersection(BoundingBox playerCollision) {
         for (BoundingBox b: boundingBoxes) {
             if (b.checkIntersection(x, y, z, playerCollision)) {
                 return true;
             }
         }
         return false;
-    } */
+    }
 }
