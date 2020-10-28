@@ -70,21 +70,6 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
-
-    <distributionManagement>
-        <repository>
-            <id>bundabrg-repo</id>
-            <url>
-                https://repo.worldguard.com.au/repository/maven-releases
-            </url>
-        </repository>
-        <snapshotRepository>
-            <id>bundabrg-repo</id>
-            <url>
-                https://repo.worldguard.com.au/repository/maven-snapshots
-            </url>
-		</snapshotRepository>
-    </distributionManagement>
 	
 	<distributionManagement>
         <repository>
