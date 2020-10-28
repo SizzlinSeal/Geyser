@@ -58,4 +58,8 @@ public class OtherCollision extends BlockCollision {
             return 0;
         });
     }
+    
+    public String toString() {
+        return "Boxes: " + Arrays.toString(boundingBoxes);
+    }
 }
