@@ -143,6 +143,7 @@ public class GeyserConnector {
         /* Initialize translators and registries */
         BiomeTranslator.init();
         BlockEntityTranslator.init();
+        BlockTranslator.init();
         EffectRegistry.init();
         EntityIdentifierRegistry.init();
         ItemRegistry.init();
