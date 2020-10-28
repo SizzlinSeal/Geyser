@@ -87,19 +87,4 @@ public class MathUtils {
     public static long chunkPositionToLong(int x, int z) {
         return ((x & 0xFFFFFFFFL) << 32L) | (z & 0xFFFFFFFFL);
     }
-
-    /**
-     * Taxicab distance is given by adding the difference in each direction.
-     * https://en.wikipedia.org/wiki/Taxicab_geometry
-     *
-     * @param firstPos First position
-     * @param secondPos Second position
-     * @return Distance
-     */
-    public static double taxicabDistance(Vector3d firstPos, Vector3d secondPos) {
-        double distance = Math.abs(firstPos.getX() - secondPos.getX());
-        distance += Math.abs(firstPos.getY() - secondPos.getY());
-        distance += Math.abs(firstPos.getZ() - secondPos.getZ());
-        return distance;
-    }
 }
