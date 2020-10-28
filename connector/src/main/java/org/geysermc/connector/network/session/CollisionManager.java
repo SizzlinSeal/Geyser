@@ -134,7 +134,7 @@ public class CollisionManager {
      * cancelled
      * See {@link BlockCollision#correctPosition(BoundingBox)} for more info
      */
-    public boolean correctPlayerPosition() {
+    public void correctPlayerPosition() {
         List<Vector3i> collidableBlocks = getPlayerCollidableBlocks();
 
         // Used when correction code needs to be run before the main correction
