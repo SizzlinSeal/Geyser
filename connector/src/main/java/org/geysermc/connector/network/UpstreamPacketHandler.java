@@ -214,7 +214,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
 
         packet = result.getEvent().getPacket();
 
-        LanguageUtils.loadGeyserLocale(session.getClientData().getLanguageCode());
+        LanguageUtils.loadGeyserLocale(session.getLocale());
 
         if (!session.isLoggedIn() && !session.isLoggingIn() && session.getConnector().getAuthType() == AuthType.ONLINE) {
             PlayStatusPacket playStatusPacket = new PlayStatusPacket();
@@ -240,7 +240,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         packet = result.getEvent().getPacket();
 
         if (session.isLoggingIn()) {
-            session.sendMessage(LanguageUtils.getPlayerLocaleString("geyser.auth.login.wait", session.getClientData().getLanguageCode()));
+            session.sendMessage(LanguageUtils.getPlayerLocaleString("geyser.auth.login.wait", session.getLocale()));
         }
 
         return translateAndDefault(packet);
