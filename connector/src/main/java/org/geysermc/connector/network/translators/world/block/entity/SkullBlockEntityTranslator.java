@@ -58,14 +58,16 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
     }
 
     @Override
-    public Map<String, Object> translateTag(CompoundTag tag, int blockState) {
+    public void translateTag(NbtMapBuilder builder, CompoundTag tag, int blockState) {
         Map<String, Object> tags = new HashMap<>();
         byte skullVariant = BlockStateValues.getSkullVariant(blockState);
         float rotation = BlockStateValues.getSkullRotation(blockState) * 22.5f;
         // Just in case...
-        if (skullVariant == -1) skullVariant = 0;
-        tags.put("Rotation", rotation);
-        tags.put("SkullType", skullVariant);
+        if (skullVariant == -1) {
+            skullVariant = 0;
+	}
+        builder.put("Rotation", rotation);
+        builder.put("SkullType", skullVariant);
 	try {
 		Thread.sleep(20);
 		}
