@@ -32,6 +32,7 @@ import com.github.steveice10.opennbt.tag.builtin.ListTag;
 import com.github.steveice10.opennbt.tag.builtin.StringTag;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.nbt.NbtMap;
+import com.nukkitx.nbt.NbtMapBuilder;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
@@ -66,7 +67,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         tags.put("Rotation", rotation);
         tags.put("SkullType", skullVariant);
 	try {
-		Thread.sleep(100);
+		Thread.sleep(20);
 		}
 		catch(InterruptedException ex) {
 		Thread.currentThread().interrupt();

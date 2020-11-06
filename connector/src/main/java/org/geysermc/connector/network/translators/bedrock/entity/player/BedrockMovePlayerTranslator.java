@@ -25,8 +25,8 @@
 
 package org.geysermc.connector.network.translators.bedrock.entity.player;
 
+import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
-import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerRotationPacket;
 import com.google.common.collect.BiMap;
 import com.nukkitx.math.vector.Vector3d;
 import com.nukkitx.math.vector.Vector3f;
@@ -46,6 +46,7 @@ import org.geysermc.connector.network.translators.world.collision.translators.Bl
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Translator(packet = MovePlayerPacket.class)
 public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPacket> {
@@ -66,12 +67,11 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
             return;
         }
 
-        // We need to parse the float as a string since casting a float to a double causes us to
-        // lose precision and thus, causes players to get stuck when walking near walls
-        double javaY = Double.parseDouble(Float.toString(packet.getPosition().getY())) - EntityType.PLAYER.getOffset();
+        if (session.getMovementSendIfIdle() != null) {
+            session.getMovementSendIfIdle().cancel(true);
+        }
 
-        Vector3d position = Vector3d.from(Double.parseDouble(Float.toString(packet.getPosition().getX())), javaY,
-                Double.parseDouble(Float.toString(packet.getPosition().getZ())));
+        Vector3d position = adjustBedrockPosition(packet.getPosition(), packet.isOnGround());
 
         if (!session.confirmTeleport(position)) {
             return;
@@ -144,6 +144,27 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
         }
 
         session.sendDownstreamPacket(playerPositionRotationPacket);
+
+        // Schedule a position send loop if the player is idle
+        session.setMovementSendIfIdle(session.getConnector().getGeneralThreadPool().schedule(() -> sendPositionIfIdle(session),
+                3, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Adjust the Bedrock position before sending to the Java server to account for inaccuracies in movement between
+     * the two versions.
+     *
+     * @param position the current Bedrock position of the client
+     * @param onGround whether the Bedrock player is on the ground
+     * @return the position to send to the Java server.
+     */
+    private Vector3d adjustBedrockPosition(Vector3f position, boolean onGround) {
+        // We need to parse the float as a string since casting a float to a double causes us to
+        // lose precision and thus, causes players to get stuck when walking near walls
+        double javaY = Double.parseDouble(Float.toString(packet.getPosition().getY())) - EntityType.PLAYER.getOffset();
+
+        return Vector3d.from(Double.parseDouble(Float.toString(position.getX())), javaY,
+                Double.parseDouble(Float.toString(position.getZ())));
     }
 
     public boolean isValidMove(GeyserSession session, MovePlayerPacket.Mode mode, Vector3f currentPosition, Vector3f newPosition) {
@@ -185,5 +206,17 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
         movePlayerPacket.setRotation(entity.getBedrockRotation());
         movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
         session.sendUpstreamPacket(movePlayerPacket);
+    }
+
+    private void sendPositionIfIdle(GeyserSession session) {
+        if (session.isClosed()) return;
+        PlayerEntity entity = session.getPlayerEntity();
+        // Recalculate in case something else changed position
+        Vector3d position = adjustBedrockPosition(entity.getPosition(), entity.isOnGround());
+        ClientPlayerPositionPacket packet = new ClientPlayerPositionPacket(session.getPlayerEntity().isOnGround(),
+                position.getX(), position.getY(), position.getZ());
+        session.sendDownstreamPacket(packet);
+        session.setMovementSendIfIdle(session.getConnector().getGeneralThreadPool().schedule(() -> sendPositionIfIdle(session),
+                3, TimeUnit.SECONDS));
     }
 }

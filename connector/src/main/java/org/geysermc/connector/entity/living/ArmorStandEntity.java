@@ -32,6 +32,7 @@ import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
 import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
 import com.nukkitx.protocol.bedrock.packet.MoveEntityAbsolutePacket;
+import lombok.Getter;
 import org.geysermc.connector.entity.LivingEntity;
 import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
@@ -39,6 +40,7 @@ import org.geysermc.connector.network.session.GeyserSession;
 public class ArmorStandEntity extends LivingEntity {
 
     // These are used to store the state of the armour stand for use when handling invisibility
+    @Getter
     private boolean isMarker = false;
     private boolean isInvisible = false;
     private boolean isSmall = false;
@@ -83,7 +85,7 @@ public class ArmorStandEntity extends LivingEntity {
         lastPositionIncludedOffset = false;
         if (secondEntity != null) {
             secondEntity.moveAbsolute(session, position.add(0d, entityType.getHeight() * (isSmall ? 0.55d : 1d), 0d), rotation, isOnGround, teleported);
-        } else if (!isMarker && isInvisible && !metadata.getFlags().getFlag(EntityFlag.INVISIBLE)) { // Means it's not visible
+        } else if (!isMarker && isInvisible && passengers.isEmpty() && !metadata.getFlags().getFlag(EntityFlag.INVISIBLE)) { // Means it's not visible
             position = position.add(0d, entityType.getHeight() * (isSmall ? 0.55d : 1d), 0d);
             lastPositionIncludedOffset = true;
         }

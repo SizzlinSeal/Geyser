@@ -226,7 +226,7 @@ public abstract class ItemTranslator {
     public abstract List<ItemEntry> getAppliedItems();
 
     public NbtMap translateNbtToBedrock(com.github.steveice10.opennbt.tag.builtin.CompoundTag tag) {
-        Map<String, Object> javaValue = new HashMap<>();
+        NbtMapBuilder builder = NbtMap.builder();
         if (tag.getValue() != null && !tag.getValue().isEmpty()) {
             for (String str : tag.getValue().keySet()) {
                 com.github.steveice10.opennbt.tag.builtin.Tag javaTag = tag.get(str);
@@ -234,11 +234,9 @@ public abstract class ItemTranslator {
                 if (translatedTag == null)
                     continue;
 
-                javaValue.put(javaTag.getName(), translatedTag);
+                builder.put(javaTag.getName(), translatedTag);
             }
         }
-        NbtMapBuilder builder = NbtMap.builder();
-        javaValue.forEach(builder::put);
         return builder.build();
     }
 
