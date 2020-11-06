@@ -235,3 +235,4 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
                 3, TimeUnit.SECONDS));
     }
 }
+
