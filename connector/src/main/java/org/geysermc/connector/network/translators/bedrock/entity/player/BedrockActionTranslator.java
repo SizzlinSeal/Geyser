@@ -172,5 +172,5 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 }, 1, TimeUnit.SECONDS);
                 break;
         }
-    }		
+    }
 }

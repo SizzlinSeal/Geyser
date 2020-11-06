@@ -355,9 +355,9 @@ public class GeyserSession implements CommandSender {
         this.loggedIn = false;
 
         this.inventoryCache.getInventories().put(0, inventory);
-		
-	connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
-	    
+
+        connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
+
         bedrockServerSession.addDisconnectHandler(disconnectReason -> {
 	EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
 	connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));

@@ -56,6 +56,7 @@ public class ResourcePack {
      */
     public static void loadPacks() {
         File directory = GeyserConnector.getInstance().getBootstrap().getConfigFolder().resolve("packs").toFile();
+
         if (!directory.exists()) {
             directory.mkdir();
 
