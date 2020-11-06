@@ -74,7 +74,6 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
 		catch(InterruptedException ex) {
 		Thread.currentThread().interrupt();
 		}
-        return tags;
     }
 
     public static GameProfile getProfile(CompoundTag tag, GeyserSession session) {
