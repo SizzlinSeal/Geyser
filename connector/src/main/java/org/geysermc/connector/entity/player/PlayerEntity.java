@@ -71,6 +71,8 @@ public class PlayerEntity extends LivingEntity {
     private String displayName;
     private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
+
+    private GeyserSession session;
 	
     private SkinProvider.SkinGeometry geometry;
 
@@ -83,7 +85,7 @@ public class PlayerEntity extends LivingEntity {
      */
     private ParrotEntity rightParrot;
 
-    public PlayerEntity(GameProfile gameProfile, long entityId, long geyserId, Vector3f position, Vector3f motion, Vector3f rotation) {
+    public PlayerEntity(GameProfile gameProfile, long entityId, long geyserId, Vector3f position, Vector3f motion, Vector3f rotation, GeyserSession session) {
         super(entityId, geyserId, EntityType.PLAYER, position, motion, rotation);
 
         profile = gameProfile;
