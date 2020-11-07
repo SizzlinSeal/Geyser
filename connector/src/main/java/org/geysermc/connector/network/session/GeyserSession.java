@@ -79,6 +79,7 @@ import org.geysermc.connector.event.events.network.SessionDisconnectEvent;
 import org.geysermc.connector.event.events.packet.DownstreamPacketReceiveEvent;
 import org.geysermc.connector.event.events.packet.DownstreamPacketSendEvent;
 import org.geysermc.connector.event.events.packet.UpstreamPacketSendEvent;
+import org.geysermc.connector.entity.player.SessionPlayerEntity;
 import org.geysermc.connector.inventory.PlayerInventory;
 import org.geysermc.connector.network.remote.RemoteServer;
 import org.geysermc.connector.network.session.auth.AuthData;
@@ -122,16 +123,22 @@ public class GeyserSession implements CommandSender {
     @Setter
     private BedrockClientData clientData;
 
-    private PlayerEntity playerEntity;
+    private final SessionPlayerEntity playerEntity;
     private PlayerInventory inventory;
 
     private ChunkCache chunkCache;
     private EntityCache entityCache;
+    private EntityEffectCache effectCache;
     private InventoryCache inventoryCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
     private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
+
+    /**
+     * Stores session collision
+     */
+    private final CollisionManager collisionManager;
 
     @Getter
     private final Long2ObjectMap<ClientboundMapItemDataPacket> storedMaps = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
@@ -160,20 +167,11 @@ public class GeyserSession implements CommandSender {
 
     private boolean sneaking;
 
-    public void setSneaking(boolean sneaking) {
-        this.sneaking = sneaking;
-        collisionManager.updatePlayerBoundingBox();
-    }
-
     @Setter
     private boolean sprinting;
 
     @Setter
     private boolean jumping;
-
-    // TODO: Remove
-    // @Getter
-    // private BoundingBox playerBoundingBox;
 
     @Setter
     private int breakingBlock;
@@ -330,24 +328,20 @@ public class GeyserSession implements CommandSender {
 
     private MinecraftProtocol protocol;
 
-    /**
-     * Stores session collision
-     */
-    private CollisionManager collisionManager;
-
     public GeyserSession(GeyserConnector connector, BedrockServerSession bedrockServerSession) {
         this.connector = connector;
         this.upstream = new UpstreamSession(bedrockServerSession);
 
         this.chunkCache = new ChunkCache(this);
         this.entityCache = new EntityCache(this);
+        this.effectCache = new EntityEffectCache();
         this.inventoryCache = new InventoryCache(this);
         this.worldCache = new WorldCache(this);
         this.windowCache = new WindowCache(this);
 
         this.collisionManager = new CollisionManager(this);
 
-        this.playerEntity = new PlayerEntity(new GameProfile(UUID.randomUUID(), "unknown"), 1, 1, Vector3f.ZERO, Vector3f.ZERO, Vector3f.ZERO, this);
+        this.playerEntity = new SessionPlayerEntity(this);
         this.inventory = new PlayerInventory();
 
         this.spawned = false;
@@ -638,6 +632,7 @@ public class GeyserSession implements CommandSender {
 
         this.chunkCache = null;
         this.entityCache = null;
+        this.effectCache = null;
         this.worldCache = null;
         this.inventoryCache = null;
         this.windowCache = null;
@@ -651,6 +646,11 @@ public class GeyserSession implements CommandSender {
 
     public void setAuthenticationData(AuthData authData) {
         this.authData = authData;
+    }
+
+    public void setSneaking(boolean sneaking) {
+        this.sneaking = sneaking;
+        collisionManager.updatePlayerBoundingBox();
     }
 
     @Override
@@ -773,6 +773,9 @@ public class GeyserSession implements CommandSender {
     }
 
     public boolean confirmTeleport(Vector3d position) {
+        if (teleportMap.size() == 0) {
+            return true;
+        }
         int teleportID = -1;
 
         for (Int2ObjectMap.Entry<TeleportCache> entry : teleportMap.int2ObjectEntrySet()) {
@@ -824,7 +827,7 @@ public class GeyserSession implements CommandSender {
 
     /**
      * Queue a packet to be sent to player.
-     *
+     * 
      * @param packet the bedrock packet from the NukkitX protocol lib
      */
     public void sendUpstreamPacket(BedrockPacket packet) {

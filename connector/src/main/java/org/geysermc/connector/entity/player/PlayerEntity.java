@@ -23,7 +23,7 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.connector.entity;
+package org.geysermc.connector.entity.player;
 
 import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.EntityMetadata;
@@ -43,12 +43,13 @@ import com.nukkitx.protocol.bedrock.packet.SetEntityLinkPacket;
 import com.nukkitx.protocol.bedrock.packet.UpdateAttributesPacket;
 import lombok.Getter;
 import lombok.Setter;
+import org.geysermc.connector.entity.Entity;
+import org.geysermc.connector.entity.LivingEntity;
 import org.geysermc.connector.entity.attribute.Attribute;
 import org.geysermc.connector.entity.attribute.AttributeType;
 import org.geysermc.connector.entity.living.animal.tameable.ParrotEntity;
 import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
-import org.geysermc.connector.network.session.cache.EntityEffectCache;
 import org.geysermc.connector.scoreboard.Team;
 import org.geysermc.connector.utils.AttributeUtils;
 import org.geysermc.connector.utils.MessageUtils;
@@ -70,9 +71,6 @@ public class PlayerEntity extends LivingEntity {
     private String displayName;
     private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
-    private final EntityEffectCache effectCache;
-
-    private GeyserSession session;
 	
     private SkinProvider.SkinGeometry geometry;
 
@@ -85,25 +83,16 @@ public class PlayerEntity extends LivingEntity {
      */
     private ParrotEntity rightParrot;
 
-    public PlayerEntity(GameProfile gameProfile, long entityId, long geyserId, Vector3f position, Vector3f motion, Vector3f rotation, GeyserSession session) {
+    public PlayerEntity(GameProfile gameProfile, long entityId, long geyserId, Vector3f position, Vector3f motion, Vector3f rotation) {
         super(entityId, geyserId, EntityType.PLAYER, position, motion, rotation);
 
         profile = gameProfile;
         uuid = gameProfile.getId();
         username = gameProfile.getName();
-        effectCache = new EntityEffectCache();
-
-        if (geyserId == 1) {
-            valid = true;
-            // We only need this for the logged in player
-            this.session = session;
-            session.getCollisionManager().updatePlayerBoundingBox(position);
-        }
     }
 
     @Override
     public void spawnEntity(GeyserSession session) {
-        if (geyserId == 1) return;
         if (!session.getUpstream().isInitialized())
             return;
 
@@ -167,11 +156,6 @@ public class PlayerEntity extends LivingEntity {
 
     @Override
     public void moveAbsolute(GeyserSession session, Vector3f position, Vector3f rotation, boolean isOnGround, boolean teleported) {
-        // If this is the player logged in through this Geyser session
-        if (geyserId == 1) {
-            session.getCollisionManager().updatePlayerBoundingBox(position);
-        }
-
         setPosition(position);
         setRotation(rotation);
 
@@ -266,11 +250,18 @@ public class PlayerEntity extends LivingEntity {
 
     @Override
     public void setPosition(Vector3f position) {
-        this.position = position.add(0, entityType.getOffset(), 0);
-        // If this is the player logged in through this Geyser session
-        if (geyserId == 1 && session != null) {
-            session.getCollisionManager().updatePlayerBoundingBox(position);
-        }
+        setPosition(position, true);
+    }
+
+    /**
+     * Set the player position and specify if the entity type's offset should be added. Set to false when the player
+     * sends us a move packet where the offset is already added
+     *
+     * @param position the new position of the Bedrock player
+     * @param includeOffset whether to include the offset
+     */
+    public void setPosition(Vector3f position, boolean includeOffset) {
+        this.position = includeOffset ? position.add(0, entityType.getOffset(), 0) : position;
     }
 
     @Override
