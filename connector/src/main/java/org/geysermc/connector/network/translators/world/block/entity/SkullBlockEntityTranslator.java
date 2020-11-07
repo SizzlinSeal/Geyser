@@ -36,6 +36,7 @@ import com.nukkitx.nbt.NbtMapBuilder;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.world.block.BlockStateValues;
@@ -135,7 +136,6 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         Vector3f rotationVector = Vector3f.from(rotation, 0, rotation);
 
         PlayerEntity player = new PlayerEntity(gameProfile, 1, geyserId, Vector3f.from(x, y, z), Vector3f.ZERO, rotationVector);
-	this.session = session;
         player.setPlayerList(false);
         player.setGeometry(SkinProvider.SkinGeometry.getSkull());
 
