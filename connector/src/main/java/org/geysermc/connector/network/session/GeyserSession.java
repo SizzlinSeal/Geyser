@@ -38,6 +38,7 @@ import com.github.steveice10.mc.protocol.data.game.window.VillagerTrade;
 import com.github.steveice10.mc.protocol.data.message.MessageSerializer;
 import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTeleportConfirmPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerRespawnPacket;
 import com.github.steveice10.mc.protocol.packet.login.server.LoginSuccessPacket;
@@ -651,6 +652,9 @@ public class GeyserSession implements CommandSender {
     public void setSneaking(boolean sneaking) {
         this.sneaking = sneaking;
         collisionManager.updatePlayerBoundingBox();
+        collisionManager.updateScaffoldingFlags();
+        // TODO: Only resend flags if changed
+        playerEntity.updateBedrockMetadata(this);
     }
 
     @Override
@@ -790,13 +794,16 @@ public class GeyserSession implements CommandSender {
 
         if (teleportID != -1) {
             // Confirm the current teleport and any earlier ones
-            // TODO: Don't assume that IDs go up over time
             while (it.hasNext()) {
-                Int2ObjectMap.Entry<TeleportCache> entry = it.next();
-                int nextID = entry.getValue().getTeleportConfirmId();
+                TeleportCache entry = it.next().getValue();
+                int nextID = entry.getTeleportConfirmId();
                 if (nextID <= teleportID) {
                     ClientTeleportConfirmPacket teleportConfirmPacket = new ClientTeleportConfirmPacket(nextID);
                     sendDownstreamPacket(teleportConfirmPacket);
+                    // Servers (especially ones like Hypixel) expect exact coordinates given back to them.
+                    ClientPlayerPositionRotationPacket positionPacket = new ClientPlayerPositionRotationPacket(playerEntity.isOnGround(),
+                            entry.getX(), entry.getY(), entry.getZ(), entry.getYaw(), entry.getPitch());
+                    sendDownstreamPacket(positionPacket);
                     it.remove();
                     connector.getLogger().debug("Confirmed teleport " + nextID);
                 }
@@ -818,7 +825,8 @@ public class GeyserSession implements CommandSender {
             if (resendID != -1) {
                 connector.getLogger().debug("Resending teleport " + resendID);
                 TeleportCache teleport = teleportMap.get(resendID);
-                getPlayerEntity().moveAbsolute(this, Vector3f.from(teleport.getX(), teleport.getY(), teleport.getZ()), (float) teleport.getYaw(), (float) teleport.getPitch(), true, true);
+                getPlayerEntity().moveAbsolute(this, Vector3f.from(teleport.getX(), teleport.getY(), teleport.getZ()),
+                        teleport.getYaw(), teleport.getPitch(), playerEntity.isOnGround(), true);
             }
         }
 
