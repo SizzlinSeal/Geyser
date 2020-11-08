@@ -153,7 +153,7 @@ public class JavaEntitySetPassengersTranslator extends PacketTranslator<ServerEn
                 mountedHeightOffset = 0;
                 break;
             case BOAT:
-                mountedHeightOffset = -0.1f;
+                mountedHeightOffset = -0.15f;
                 break;
             case HOGLIN:
             case ZOGLIN:
