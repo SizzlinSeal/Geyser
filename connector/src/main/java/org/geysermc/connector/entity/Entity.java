@@ -36,7 +36,6 @@ import com.github.steveice10.mc.protocol.data.message.Message;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerActionPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerUseItemPacket;
 import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.data.AttributeData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
@@ -54,7 +53,6 @@ import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.utils.AttributeUtils;
-import org.geysermc.connector.utils.ChunkUtils;
 import org.geysermc.connector.utils.MessageUtils;
 
 import java.util.ArrayList;
@@ -340,18 +338,6 @@ public class Entity {
                     metadata.getFlags().setFlag(EntityFlag.SLEEPING, true);
                     // Has to be a byte or it does not work
                     metadata.put(EntityData.PLAYER_FLAGS, (byte) 2);
-                    if (entityId == session.getPlayerEntity().getEntityId()) {
-                        Vector3i lastInteractionPos = session.getLastInteractionPosition();
-                        metadata.put(EntityData.BED_POSITION, lastInteractionPos);
-                        if (session.getConnector().getConfig().isCacheChunks()) {
-                            int bed = session.getConnector().getWorldManager().getBlockAt(session, lastInteractionPos.getX(),
-                                    lastInteractionPos.getY(), lastInteractionPos.getZ());
-                            // Bed has to be updated, or else player is floating in the air
-                            ChunkUtils.updateBlock(session, bed, lastInteractionPos);
-                        }
-                    } else {
-                        metadata.put(EntityData.BED_POSITION, Vector3i.from(position.getFloorX(), position.getFloorY() - 2, position.getFloorZ()));
-                    }
                     metadata.put(EntityData.BOUNDING_BOX_WIDTH, 0.2f);
                     metadata.put(EntityData.BOUNDING_BOX_HEIGHT, 0.2f);
                 } else if (metadata.getFlags().getFlag(EntityFlag.SLEEPING)) {
