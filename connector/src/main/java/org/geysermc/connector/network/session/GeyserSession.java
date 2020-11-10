@@ -653,8 +653,6 @@ public class GeyserSession implements CommandSender {
         this.sneaking = sneaking;
         collisionManager.updatePlayerBoundingBox();
         collisionManager.updateScaffoldingFlags();
-        // TODO: Only resend flags if changed
-        playerEntity.updateBedrockMetadata(this);
     }
 
     @Override
