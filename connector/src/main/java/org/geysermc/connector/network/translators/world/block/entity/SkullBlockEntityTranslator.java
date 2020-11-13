@@ -32,11 +32,12 @@ import com.github.steveice10.opennbt.tag.builtin.ListTag;
 import com.github.steveice10.opennbt.tag.builtin.StringTag;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.nbt.NbtMap;
+import com.nukkitx.nbt.NbtMapBuilder;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.GeyserConnector;
-import org.geysermc.connector.entity.PlayerEntity;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.world.block.BlockStateValues;
 import org.geysermc.connector.utils.SkinProvider;
@@ -57,23 +58,22 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
     }
 
     @Override
-    public Map<String, Object> translateTag(CompoundTag tag, int blockState) {
+    public void translateTag(NbtMapBuilder builder, CompoundTag tag, int blockState) {
         Map<String, Object> tags = new HashMap<>();
         byte skullVariant = BlockStateValues.getSkullVariant(blockState);
         float rotation = BlockStateValues.getSkullRotation(blockState) * 22.5f;
         // Just in case...
-        if (skullVariant == -1) skullVariant = 0;
-        tags.put("Rotation", rotation);
-        tags.put("SkullType", skullVariant);
-	    
-	    		try{
-			Thread.sleep(250);
-			}
-			catch(InterruptedException ex) {
-			Thread.currentThread().interrupt();
-			}
-	    
-        return tags;
+        if (skullVariant == -1) {
+            skullVariant = 0;
+	}
+        builder.put("Rotation", rotation);
+        builder.put("SkullType", skullVariant);
+	try {
+		Thread.sleep(20);
+		}
+		catch(InterruptedException ex) {
+		Thread.currentThread().interrupt();
+		}
     }
 
     public static GameProfile getProfile(CompoundTag tag, GeyserSession session) {
@@ -135,7 +135,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
 
         Vector3f rotationVector = Vector3f.from(rotation, 0, rotation);
 
-        PlayerEntity player = new PlayerEntity(gameProfile, 1, geyserId, Vector3f.from(x, y, z), Vector3f.ZERO, rotationVector, session);
+        PlayerEntity player = new PlayerEntity(gameProfile, 1, geyserId, Vector3f.from(x, y, z), Vector3f.ZERO, rotationVector);
         player.setPlayerList(false);
         player.setGeometry(SkinProvider.SkinGeometry.getSkull());
 

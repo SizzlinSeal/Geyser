@@ -1,30 +1,29 @@
 /*
  * Copyright (c) 2019-2020 GeyserMC. http://geysermc.org
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is
- *  furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- *  THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
- *  @author GeyserMC
- *  @link https://github.com/GeyserMC/Geyser
- *
+ * @author GeyserMC
+ * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.connector.network.translators.world.collision;
+package org.geysermc.connector.network.translators.collision;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.BiMap;
@@ -32,11 +31,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.network.session.GeyserSession;
+import org.geysermc.connector.network.translators.collision.translators.BlockCollision;
+import org.geysermc.connector.network.translators.collision.translators.EmptyCollision;
+import org.geysermc.connector.network.translators.collision.translators.OtherCollision;
+import org.geysermc.connector.network.translators.collision.translators.SolidCollision;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
-import org.geysermc.connector.network.translators.world.collision.translators.BlockCollision;
-import org.geysermc.connector.network.translators.world.collision.translators.EmptyCollision;
-import org.geysermc.connector.network.translators.world.collision.translators.OtherCollision;
-import org.geysermc.connector.network.translators.world.collision.translators.SolidCollision;
 import org.geysermc.connector.utils.FileUtils;
 import org.reflections.Reflections;
 
@@ -46,7 +45,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class CollisionTranslator {
-    private static final Int2ObjectMap<BlockCollision> collisionMap = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectMap<BlockCollision> COLLISION_MAP = new Int2ObjectOpenHashMap<>();
 
     public static void init() {
         // If chunk caching is off then don't initialize
@@ -58,7 +57,7 @@ public class CollisionTranslator {
 
         Map<Class<?>, CollisionRemapper> annotationMap = new HashMap<>();
 
-        Reflections ref = new Reflections("org.geysermc.connector.network.translators.world.collision.translators");
+        Reflections ref = GeyserConnector.getInstance().useXmlReflections() ? FileUtils.getReflections("org.geysermc.connector.network.translators.collision.translators") : new Reflections("org.geysermc.connector.network.translators.collision.translators");
         for (Class<?> clazz : ref.getTypesAnnotatedWith(CollisionRemapper.class)) {
             GeyserConnector.getInstance().getLogger().debug("Found annotated collision translator: " + clazz.getCanonicalName());
 
@@ -86,7 +85,7 @@ public class CollisionTranslator {
             if (newCollision != null) {
                 instantiatedCollision.put(newCollision.getClass(), newCollision);
             }
-            collisionMap.put(entry.getValue(), newCollision);
+            COLLISION_MAP.put(entry.getValue().intValue(), newCollision);
         }
     }
 
@@ -97,6 +96,7 @@ public class CollisionTranslator {
         if (blockID.contains("[")) {
             params = "[" + blockID.split("\\[")[1];
         }
+        int collisionIndex = BlockTranslator.JAVA_RUNTIME_ID_TO_COLLISION_INDEX.get(numericBlockID);
 
         for (Class<?> type : collisionTypes) {
             CollisionRemapper annotation = annotationMap.get(type);
@@ -114,7 +114,15 @@ public class CollisionTranslator {
                     if (type == EmptyCollision.class) {
                         return null;
                     }
-                    BlockCollision collision = (BlockCollision) type.getDeclaredConstructor(String.class).newInstance(params);
+
+                    BlockCollision collision;
+                    if (annotation.passDefaultBoxes()) {
+                        // Create an OtherCollision instance and get the bounding boxes
+                        BoundingBox[] defaultBoxes = new OtherCollision((ArrayNode) collisionList.get(collisionIndex)).getBoundingBoxes();
+                        collision = (BlockCollision) type.getDeclaredConstructor(String.class, BoundingBox[].class).newInstance(params, defaultBoxes);
+                    } else {
+                        collision = (BlockCollision) type.getDeclaredConstructor(String.class).newInstance(params);
+                    }
 
                     // If there's an existing instance equal to this one, use that instead
                     for (Map.Entry<Class<?>, BlockCollision> entry : instantiatedCollision.entrySet()) {
@@ -130,8 +138,6 @@ public class CollisionTranslator {
                 }
             }
         }
-
-        int collisionIndex = BlockTranslator.JAVA_RUNTIME_ID_TO_COLLISION_INDEX.get(numericBlockID);
 
         // Unless some of the low IDs are changed, which is unlikely, the first item should always be empty collision
         if (collisionIndex == 0) {
@@ -151,7 +157,7 @@ public class CollisionTranslator {
             }
         }
 
-        BlockCollision collision = new OtherCollision((ArrayNode) collisionList.get(collisionIndex), blockID);
+        BlockCollision collision = new OtherCollision((ArrayNode) collisionList.get(collisionIndex));
         // If there's an existing instance equal to this one, use that instead
         for (Map.Entry<Class<?>, BlockCollision> entry : instantiatedCollision.entrySet()) {
             if (entry.getValue().equals(collision)) {
@@ -163,10 +169,10 @@ public class CollisionTranslator {
         return collision;
     }
 
-    // Note: these reuse classes, so don't try to store more than once instance or coordinayes will get overwritten
+    // Note: these reuse classes, so don't try to store more than once instance or coordinates will get overwritten
 
-    public static BlockCollision getCollision(Integer blockID, int x, int y, int z) {
-        BlockCollision collision = collisionMap.get(blockID);
+    public static BlockCollision getCollision(int blockID, int x, int y, int z) {
+        BlockCollision collision = COLLISION_MAP.get(blockID);
         if (collision != null) {
             collision.setPosition(x, y, z);
         }
@@ -174,12 +180,9 @@ public class CollisionTranslator {
     }
 
 
-    public static BlockCollision getCollisionAt(int x, int y, int z, GeyserSession session) {
+    public static BlockCollision getCollisionAt(GeyserSession session, int x, int y, int z) {
         try {
-            return getCollision(
-                    session.getConnector().getWorldManager().getBlockAt(session, x, y, z),
-                    x, y, z
-            );
+            return getCollision(session.getConnector().getWorldManager().getBlockAt(session, x, y, z), x, y, z);
         } catch (ArrayIndexOutOfBoundsException e) {
             // Block out of world
             return null;

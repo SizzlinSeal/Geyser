@@ -23,25 +23,39 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.connector.network.session;
+package org.geysermc.connector.network.translators.collision;
 
 import com.nukkitx.math.vector.Vector3d;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
 import lombok.Getter;
-import org.geysermc.connector.network.translators.world.collision.CollisionTranslator;
-import org.geysermc.connector.network.translators.world.collision.translators.BlockCollision;
-import org.geysermc.connector.utils.BoundingBox;
+import lombok.Setter;
+import org.geysermc.connector.network.session.GeyserSession;
+import org.geysermc.connector.network.translators.collision.translators.BlockCollision;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CollisionManager {
 
-    private GeyserSession session;
+    private final GeyserSession session;
 
     @Getter
     private BoundingBox playerBoundingBox;
+
+    /**
+     * Whether the player is inside scaffolding
+     */
+    @Setter
+    private boolean touchingScaffolding;
+
+    /**
+     * Whether the player is on top of scaffolding
+     */
+    @Setter
+    private boolean onScaffolding;
 
     /**
      * Additional space where blocks are checked, which is helpful for fixing NoCheatPlus's Passable check.
@@ -59,7 +73,7 @@ public class CollisionManager {
      * @param position The new position of the player
      */
     public void updatePlayerBoundingBox(Vector3f position) {
-        updatePlayerBoundingBox(Vector3d.from(position.getX(), position.getY(), position.getZ()));
+        updatePlayerBoundingBox(position.toDouble());
     }
 
     /**
@@ -129,13 +143,23 @@ public class CollisionManager {
         return blocks;
     }
 
-    public void correctPlayerPosition() {
+    /**
+     * Returns false if the movement is invalid, and in this case it shouldn't be sent to the server and should be
+     * cancelled
+     * See {@link BlockCollision#correctPosition(GeyserSession, BoundingBox)} for more info
+     */
+    public boolean correctPlayerPosition() {
+
+        // These may be set to true by the correctPosition method in ScaffoldingCollision
+        touchingScaffolding = false;
+        onScaffolding = false;
+
         List<Vector3i> collidableBlocks = getPlayerCollidableBlocks();
 
         // Used when correction code needs to be run before the main correction
         for (Vector3i blockPos : collidableBlocks) {
             BlockCollision blockCollision = CollisionTranslator.getCollisionAt(
-                    blockPos.getX(), blockPos.getY(), blockPos.getZ(), session
+                    session, blockPos.getX(), blockPos.getY(), blockPos.getZ()
             );
             if (blockCollision != null) {
                 blockCollision.beforeCorrectPosition(playerBoundingBox);
@@ -145,11 +169,40 @@ public class CollisionManager {
         // Main correction code
         for (Vector3i blockPos : collidableBlocks) {
             BlockCollision blockCollision = CollisionTranslator.getCollisionAt(
-                    blockPos.getX(), blockPos.getY(), blockPos.getZ(), session
+                    session, blockPos.getX(), blockPos.getY(), blockPos.getZ()
             );
             if (blockCollision != null) {
-                blockCollision.correctPosition(playerBoundingBox);
+                if (!blockCollision.correctPosition(session, playerBoundingBox)) {
+                    return false;
+                }
             }
+        }
+
+        updateScaffoldingFlags();
+
+        return true;
+    }
+
+    /**
+     * Updates scaffolding entity flags
+     * Scaffolding needs to be checked per-move since it's a flag in Bedrock but Java does it client-side
+     */
+    public void updateScaffoldingFlags() {
+        EntityFlags flags = session.getPlayerEntity().getMetadata().getFlags();
+        boolean flagsChanged;
+        boolean isSneakingWithScaffolding = (touchingScaffolding || onScaffolding) && session.isSneaking();
+
+        flagsChanged = flags.getFlag(EntityFlag.FALL_THROUGH_SCAFFOLDING) != isSneakingWithScaffolding;
+        flagsChanged |= flags.getFlag(EntityFlag.OVER_SCAFFOLDING) != isSneakingWithScaffolding;
+
+        flags.setFlag(EntityFlag.FALL_THROUGH_SCAFFOLDING, isSneakingWithScaffolding);
+        flags.setFlag(EntityFlag.OVER_SCAFFOLDING, isSneakingWithScaffolding);
+
+        flagsChanged |= flags.getFlag(EntityFlag.IN_SCAFFOLDING) != touchingScaffolding;
+        flags.setFlag(EntityFlag.IN_SCAFFOLDING, touchingScaffolding);
+
+        if (flagsChanged) {
+            session.getPlayerEntity().updateBedrockMetadata(session);
         }
     }
 }

@@ -33,10 +33,12 @@ import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.data.SubProtocol;
 import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
 import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
+import com.github.steveice10.mc.protocol.data.game.statistic.Statistic;
 import com.github.steveice10.mc.protocol.data.game.window.VillagerTrade;
 import com.github.steveice10.mc.protocol.data.message.MessageSerializer;
 import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
+import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTeleportConfirmPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerRespawnPacket;
 import com.github.steveice10.mc.protocol.packet.login.server.LoginSuccessPacket;
@@ -61,6 +63,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.geysermc.common.window.CustomFormWindow;
 import org.geysermc.common.window.FormWindow;
@@ -68,7 +71,7 @@ import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.command.CommandSender;
 import org.geysermc.connector.common.AuthType;
 import org.geysermc.connector.entity.Entity;
-import org.geysermc.connector.entity.PlayerEntity;
+import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.event.EventManager;
 import org.geysermc.connector.event.EventResult;
 import org.geysermc.connector.event.events.geyser.GeyserLoginEvent;
@@ -77,6 +80,7 @@ import org.geysermc.connector.event.events.network.SessionDisconnectEvent;
 import org.geysermc.connector.event.events.packet.DownstreamPacketReceiveEvent;
 import org.geysermc.connector.event.events.packet.DownstreamPacketSendEvent;
 import org.geysermc.connector.event.events.packet.UpstreamPacketSendEvent;
+import org.geysermc.connector.entity.player.SessionPlayerEntity;
 import org.geysermc.connector.inventory.PlayerInventory;
 import org.geysermc.connector.network.remote.RemoteServer;
 import org.geysermc.connector.network.session.auth.AuthData;
@@ -85,11 +89,10 @@ import org.geysermc.connector.network.session.cache.*;
 import org.geysermc.connector.network.translators.BiomeTranslator;
 import org.geysermc.connector.network.translators.EntityIdentifierRegistry;
 import org.geysermc.connector.network.translators.PacketTranslatorRegistry;
+import org.geysermc.connector.network.translators.collision.CollisionManager;
 import org.geysermc.connector.network.translators.inventory.EnchantmentInventoryTranslator;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
-import org.geysermc.connector.network.translators.world.collision.CollisionTranslator;
-import org.geysermc.connector.network.translators.world.collision.translators.BlockCollision;
 import org.geysermc.connector.utils.*;
 import org.geysermc.floodgate.util.BedrockData;
 import org.geysermc.floodgate.util.EncryptionUtil;
@@ -121,16 +124,22 @@ public class GeyserSession implements CommandSender {
     @Setter
     private BedrockClientData clientData;
 
-    private PlayerEntity playerEntity;
+    private final SessionPlayerEntity playerEntity;
     private PlayerInventory inventory;
 
     private ChunkCache chunkCache;
     private EntityCache entityCache;
+    private EntityEffectCache effectCache;
     private InventoryCache inventoryCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
     private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
+
+    /**
+     * Stores session collision
+     */
+    private final CollisionManager collisionManager;
 
     @Getter
     private final Long2ObjectMap<ClientboundMapItemDataPacket> storedMaps = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
@@ -159,20 +168,11 @@ public class GeyserSession implements CommandSender {
 
     private boolean sneaking;
 
-    public void setSneaking(boolean sneaking) {
-        this.sneaking = sneaking;
-        collisionManager.updatePlayerBoundingBox();
-    }
-
     @Setter
     private boolean sprinting;
 
     @Setter
     private boolean jumping;
-
-    // TODO: Remove
-    // @Getter
-    // private BoundingBox playerBoundingBox;
 
     @Setter
     private int breakingBlock;
@@ -249,6 +249,12 @@ public class GeyserSession implements CommandSender {
     @Setter
     private ScheduledFuture<?> bucketScheduledFuture;
 
+    /**
+     * Sends a movement packet every three seconds if the player hasn't moved. Prevents timeouts when AFK in certain instances.
+     */
+    @Setter
+    private ScheduledFuture<?> movementSendIfIdle;
+
     private boolean reducedDebugInfo = false;
 
     @Setter
@@ -305,12 +311,23 @@ public class GeyserSession implements CommandSender {
     @Setter
     private String lastSignMessage;
 
-    private MinecraftProtocol protocol;
+    /**
+     * Stores a map of all statistics sent from the server.
+     * The server only sends new statistics back to us, so in order to show all statistics we need to cache existing ones.
+     */
+    private final Map<Statistic, Integer> statistics = new HashMap<>();
 
     /**
-     * Stores session collision
+     * Whether we're expecting statistics to be sent back to us.
      */
-    private CollisionManager collisionManager;
+    @Setter
+    private boolean waitingForStatistics = false;
+
+    @Setter
+    private List<UUID> selectedEmotes = new ArrayList<>();
+    private final Set<UUID> emotes = new HashSet<>();
+
+    private MinecraftProtocol protocol;
 
     public GeyserSession(GeyserConnector connector, BedrockServerSession bedrockServerSession) {
         this.connector = connector;
@@ -318,13 +335,14 @@ public class GeyserSession implements CommandSender {
 
         this.chunkCache = new ChunkCache(this);
         this.entityCache = new EntityCache(this);
+        this.effectCache = new EntityEffectCache();
         this.inventoryCache = new InventoryCache(this);
         this.worldCache = new WorldCache(this);
         this.windowCache = new WindowCache(this);
 
         this.collisionManager = new CollisionManager(this);
 
-        this.playerEntity = new PlayerEntity(new GameProfile(UUID.randomUUID(), "unknown"), 1, 1, Vector3f.ZERO, Vector3f.ZERO, Vector3f.ZERO, this);
+        this.playerEntity = new SessionPlayerEntity(this);
         this.inventory = new PlayerInventory();
 
         this.spawned = false;
@@ -332,16 +350,14 @@ public class GeyserSession implements CommandSender {
 
         this.inventoryCache.getInventories().put(0, inventory);
 
-        EventManager.getInstance().triggerEvent(new SessionConnectEvent(this, "Disconnected by Server")) // TODO: @translate
-                .onCancelled(result -> disconnect(result.getEvent().getMessage()));
-        
+        connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
+
         bedrockServerSession.addDisconnectHandler(disconnectReason -> {
-            EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
+	EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
+	connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
 
-            connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
-
-            disconnect(disconnectReason.name());
-            connector.removePlayer(this);
+        disconnect(disconnectReason.name());
+        connector.removePlayer(this);
         });
     }
 
@@ -500,7 +516,7 @@ public class GeyserSession implements CommandSender {
                         // as it has to be extracted from a JAR
                         if (locale.toLowerCase().equals("en_us") && !LocaleUtils.LOCALE_MAPPINGS.containsKey("en_us")) {
                             // This should probably be left hardcoded as it will only show for en_us clients
-                            sendMessage("Downloading your locale (en_us) this may take some time");
+                            sendMessage("Loading your locale (en_us); if this isn't already downloaded, this may take some time");
                         }
 
                         // Download and load the language for the player
@@ -617,6 +633,7 @@ public class GeyserSession implements CommandSender {
 
         this.chunkCache = null;
         this.entityCache = null;
+        this.effectCache = null;
         this.worldCache = null;
         this.inventoryCache = null;
         this.windowCache = null;
@@ -630,6 +647,12 @@ public class GeyserSession implements CommandSender {
 
     public void setAuthenticationData(AuthData authData) {
         this.authData = authData;
+    }
+
+    public void setSneaking(boolean sneaking) {
+        this.sneaking = sneaking;
+        collisionManager.updatePlayerBoundingBox();
+        collisionManager.updateScaffoldingFlags();
     }
 
     @Override
@@ -655,6 +678,11 @@ public class GeyserSession implements CommandSender {
         return false;
     }
 
+     @Override
+     public String getLocale() {
+        return clientData.getLanguageCode();
+     }
+
     public void sendForm(FormWindow window, int id) {
         windowCache.showWindow(window, id);
     }
@@ -666,7 +694,7 @@ public class GeyserSession implements CommandSender {
 
         ChunkRadiusUpdatedPacket chunkRadiusUpdatedPacket = new ChunkRadiusUpdatedPacket();
         chunkRadiusUpdatedPacket.setRadius(renderDistance);
-        upstream.sendPacket(chunkRadiusUpdatedPacket);
+        sendUpstreamPacket(chunkRadiusUpdatedPacket);
     }
 
     public InetSocketAddress getSocketAddress() {
@@ -691,7 +719,7 @@ public class GeyserSession implements CommandSender {
         startGamePacket.setLevelGameType(GameType.SURVIVAL);
         startGamePacket.setDifficulty(1);
         startGamePacket.setDefaultSpawn(Vector3i.ZERO);
-        startGamePacket.setAchievementsDisabled(true);
+        startGamePacket.setAchievementsDisabled(!connector.getConfig().isXboxAchievementsEnabled());
         startGamePacket.setCurrentTick(-1);
         startGamePacket.setEduEditionOffers(0);
         startGamePacket.setEduFeaturesEnabled(false);
@@ -702,7 +730,7 @@ public class GeyserSession implements CommandSender {
         startGamePacket.getGamerules().add(new GameRuleData<>("showcoordinates", true));
         startGamePacket.setPlatformBroadcastMode(GamePublishSetting.PUBLIC);
         startGamePacket.setXblBroadcastMode(GamePublishSetting.PUBLIC);
-        startGamePacket.setCommandsEnabled(true);
+        startGamePacket.setCommandsEnabled(!connector.getConfig().isXboxAchievementsEnabled());
         startGamePacket.setTexturePacksRequired(false);
         startGamePacket.setBonusChestEnabled(false);
         startGamePacket.setStartingWithMap(false);
@@ -733,9 +761,23 @@ public class GeyserSession implements CommandSender {
 
     public void addTeleport(TeleportCache teleportCache) {
         teleportMap.put(teleportCache.getTeleportConfirmId(), teleportCache);
+
+        ObjectIterator<Int2ObjectMap.Entry<TeleportCache>> it = teleportMap.int2ObjectEntrySet().iterator();
+
+        // Remove any teleports with a higher number - maybe this is a world change that reset the ID to 0?
+        while (it.hasNext()) {
+            Int2ObjectMap.Entry<TeleportCache> entry = it.next();
+            int nextID = entry.getValue().getTeleportConfirmId();
+            if (nextID > teleportCache.getTeleportConfirmId()) {
+                it.remove();
+            }
+        }
     }
 
     public boolean confirmTeleport(Vector3d position) {
+        if (teleportMap.size() == 0) {
+            return true;
+        }
         int teleportID = -1;
 
         for (Int2ObjectMap.Entry<TeleportCache> entry : teleportMap.int2ObjectEntrySet()) {
@@ -750,13 +792,16 @@ public class GeyserSession implements CommandSender {
 
         if (teleportID != -1) {
             // Confirm the current teleport and any earlier ones
-            // TODO: Don't assume that IDs go up over time
             while (it.hasNext()) {
-                Int2ObjectMap.Entry<TeleportCache> entry = it.next();
-                int nextID = entry.getValue().getTeleportConfirmId();
+                TeleportCache entry = it.next().getValue();
+                int nextID = entry.getTeleportConfirmId();
                 if (nextID <= teleportID) {
                     ClientTeleportConfirmPacket teleportConfirmPacket = new ClientTeleportConfirmPacket(nextID);
                     sendDownstreamPacket(teleportConfirmPacket);
+                    // Servers (especially ones like Hypixel) expect exact coordinates given back to them.
+                    ClientPlayerPositionRotationPacket positionPacket = new ClientPlayerPositionRotationPacket(playerEntity.isOnGround(),
+                            entry.getX(), entry.getY(), entry.getZ(), entry.getYaw(), entry.getPitch());
+                    sendDownstreamPacket(positionPacket);
                     it.remove();
                     connector.getLogger().debug("Confirmed teleport " + nextID);
                 }
@@ -778,7 +823,8 @@ public class GeyserSession implements CommandSender {
             if (resendID != -1) {
                 connector.getLogger().debug("Resending teleport " + resendID);
                 TeleportCache teleport = teleportMap.get(resendID);
-                getPlayerEntity().moveAbsolute(this, Vector3f.from(teleport.getX(), teleport.getY(), teleport.getZ()), (float) teleport.getYaw(), (float) teleport.getPitch(), true, true);
+                getPlayerEntity().moveAbsolute(this, Vector3f.from(teleport.getX(), teleport.getY(), teleport.getZ()),
+                        teleport.getYaw(), teleport.getPitch(), playerEntity.isOnGround(), true);
             }
         }
 
@@ -787,7 +833,7 @@ public class GeyserSession implements CommandSender {
 
     /**
      * Queue a packet to be sent to player.
-     *
+     * 
      * @param packet the bedrock packet from the NukkitX protocol lib
      */
     public void sendUpstreamPacket(BedrockPacket packet) {
@@ -926,6 +972,33 @@ public class GeyserSession implements CommandSender {
     }
 
     /**
+     * Used for updating statistic values since we only get changes from the server
+     *
+     * @param statistics Updated statistics values
+     */
+    public void updateStatistics(@NonNull Map<Statistic, Integer> statistics) {
+        this.statistics.putAll(statistics);
+    }
+
+    public void refreshEmotes(List<UUID> emotes) {
+        this.selectedEmotes = emotes;
+        this.emotes.addAll(emotes);
+        for (GeyserSession player : connector.getPlayers()) {
+            List<UUID> pieces = new ArrayList<>();
+            for (UUID piece : emotes) {
+                if (!player.getEmotes().contains(piece)) {
+                    pieces.add(piece);
+                }
+                player.getEmotes().add(piece);
+            }
+            EmoteListPacket emoteList = new EmoteListPacket();
+            emoteList.setRuntimeEntityId(player.getPlayerEntity().getGeyserId());
+            emoteList.getPieceIds().addAll(pieces);
+            player.sendUpstreamPacket(emoteList);
+        }
+    }
+
+    /**
      * Send message on a Plugin Channel - https://www.spigotmc.org/wiki/bukkit-bungee-plugin-messaging-channel
      *
      * @param channel channel to send on
@@ -951,5 +1024,5 @@ public class GeyserSession implements CommandSender {
      */
     public void unregisterPluginChannel(String channel) {
         sendDownstreamPacket(new ClientPluginMessagePacket("minecraft:unregister", channel.getBytes()));
-	}
+    }
 }

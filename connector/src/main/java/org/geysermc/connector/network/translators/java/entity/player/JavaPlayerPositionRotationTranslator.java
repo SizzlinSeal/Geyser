@@ -32,7 +32,8 @@ import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.packet.MovePlayerPacket;
 import com.nukkitx.protocol.bedrock.packet.RespawnPacket;
 import com.nukkitx.protocol.bedrock.packet.SetEntityDataPacket;
-import org.geysermc.connector.entity.PlayerEntity;
+import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
+import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.session.cache.TeleportCache;
@@ -49,6 +50,13 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
         PlayerEntity entity = session.getPlayerEntity();
         if (entity == null)
             return;
+        
+        if (!session.getUpstream().isInitialized()) {
+            // Spawn the player
+            PlayStatusPacket playStatusPacket = new PlayStatusPacket();
+            playStatusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
+            session.sendUpstreamPacket(playStatusPacket);
+        }
 
         if (!session.isLoggedIn())
             return;
@@ -92,8 +100,7 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
         // Ignore certain move correction packets for smoother movement
         // These are never relative
         // When chunk caching is enabled this isn't needed as we shouldn't get these
-        if (!session.getConnector().getConfig().isCacheChunks() &&
-                packet.getRelative().isEmpty()) {
+        if (!session.getConnector().getConfig().isCacheChunks() && packet.getRelative().isEmpty()) {
             double xDis = Math.abs(entity.getPosition().getX() - packet.getX());
             double yDis = entity.getPosition().getY() - packet.getY();
             double zDis = Math.abs(entity.getPosition().getZ() - packet.getZ());
@@ -113,14 +120,16 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
         double newZ = packet.getZ() +
                 (packet.getRelative().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
 
-        double newPitch = packet.getPitch() +
+        float newPitch = packet.getPitch() +
                 (packet.getRelative().contains(PositionElement.PITCH) ? entity.getBedrockRotation().getX() : 0);
-        double newYaw = packet.getYaw() +
+        float newYaw = packet.getYaw() +
                 (packet.getRelative().contains(PositionElement.YAW) ? entity.getBedrockRotation().getY() : 0);
 
+        session.getConnector().getLogger().debug("Teleport from " + entity.getPosition().getX() + " " + (entity.getPosition().getY() - EntityType.PLAYER.getOffset()) + " " + entity.getPosition().getZ());
+
         session.addTeleport(new TeleportCache(newX, newY, newZ, newPitch, newYaw, packet.getTeleportId()));
-        entity.moveAbsolute(session, Vector3f.from(newX, newY, newZ), (float) newYaw, (float) newPitch, true, true);
-        ClientTeleportConfirmPacket teleportConfirmPacket = new ClientTeleportConfirmPacket(packet.getTeleportId());
-        session.sendDownstreamPacket(teleportConfirmPacket);
+        entity.moveAbsolute(session, Vector3f.from(newX, newY, newZ), newYaw, newPitch, true, true);
+
+        session.getConnector().getLogger().debug("to " + entity.getPosition().getX() + " " + (entity.getPosition().getY() - EntityType.PLAYER.getOffset()) + " " + entity.getPosition().getZ());
     }
 }

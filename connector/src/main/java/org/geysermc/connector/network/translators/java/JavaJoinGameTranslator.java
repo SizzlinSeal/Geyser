@@ -34,7 +34,7 @@ import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePack
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.PlayerPermission;
 import com.nukkitx.protocol.bedrock.packet.*;
-import org.geysermc.connector.entity.PlayerEntity;
+import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslator;
 import org.geysermc.connector.network.translators.Translator;
@@ -66,6 +66,10 @@ public class JavaJoinGameTranslator extends PacketTranslator<ServerJoinGamePacke
         bedrockPacket.setUniqueEntityId(session.getPlayerEntity().getGeyserId());
         bedrockPacket.setPlayerPermission(PlayerPermission.MEMBER);
         session.sendUpstreamPacket(bedrockPacket);
+        
+        PlayStatusPacket playStatus = new PlayStatusPacket();
+        playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
+        // session.sendPacket(playStatus);
 
         SetPlayerGameTypePacket playerGameTypePacket = new SetPlayerGameTypePacket();
         playerGameTypePacket.setGamemode(packet.getGameMode().ordinal());
@@ -80,7 +84,7 @@ public class JavaJoinGameTranslator extends PacketTranslator<ServerJoinGamePacke
         session.setRenderDistance(packet.getViewDistance());
 
         // We need to send our skin parts to the server otherwise java sees us with no hat, jacket etc
-        String locale = session.getClientData().getLanguageCode();
+        String locale = session.getLocale();
         List<SkinPart> skinParts = Arrays.asList(SkinPart.values());
         ClientSettingsPacket clientSettingsPacket = new ClientSettingsPacket(locale, (byte) session.getRenderDistance(), ChatVisibility.FULL, true, skinParts, HandPreference.RIGHT_HAND);
         session.sendDownstreamPacket(clientSettingsPacket);

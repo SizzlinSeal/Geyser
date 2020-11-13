@@ -23,43 +23,31 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.connector.network.translators.world.collision.translators;
+package org.geysermc.connector.network.translators.collision.translators;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.geysermc.connector.utils.BoundingBox;
+import org.geysermc.connector.network.translators.collision.BoundingBox;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 
 public class OtherCollision extends BlockCollision {
 
-    public OtherCollision(ArrayNode collisionList, String ID) { // TODO: remove id
+    public OtherCollision(ArrayNode collisionList) {
         super();
         boundingBoxes = new BoundingBox[collisionList.size()];
 
-        for (int i = 0; i < collisionList.size(); i++)
-        {
+        for (int i = 0; i < collisionList.size(); i++) {
             ArrayNode collisionBoxArray = (ArrayNode) collisionList.get(i);
-            boundingBoxes[i] = new BoundingBox(collisionBoxArray.get(0).asDouble() + ((collisionBoxArray.get(3).asDouble() - collisionBoxArray.get(0).asDouble()) / 2),
-                    collisionBoxArray.get(1).asDouble() + ((collisionBoxArray.get(4).asDouble() - collisionBoxArray.get(1).asDouble()) / 2),
-                    collisionBoxArray.get(2).asDouble() + ((collisionBoxArray.get(5).asDouble() - collisionBoxArray.get(2).asDouble()) / 2),
-                    collisionBoxArray.get(3).asDouble() - collisionBoxArray.get(0).asDouble(),
-                    collisionBoxArray.get(4).asDouble() - collisionBoxArray.get(1).asDouble(),
-                    collisionBoxArray.get(5).asDouble() - collisionBoxArray.get(2).asDouble());
+            boundingBoxes[i] = new BoundingBox(collisionBoxArray.get(0).asDouble(),
+                    collisionBoxArray.get(1).asDouble(),
+                    collisionBoxArray.get(2).asDouble(),
+                    collisionBoxArray.get(3).asDouble(),
+                    collisionBoxArray.get(4).asDouble(),
+                    collisionBoxArray.get(5).asDouble());
         }
 
         // Sorting by lowest Y first fixes some bugs
-        Arrays.sort(boundingBoxes, (b1, b2) -> {
-            if (b1.getMiddleY() < b2.getMiddleY())
-                return -1;
-            if (b1.getMiddleY() > b2.getMiddleY())
-                return 1;
-            return 0;
-        });
-    }
-
-    public String toString() {
-        return "Boxes: " + Arrays.toString(boundingBoxes);
+        Arrays.sort(boundingBoxes, Comparator.comparingDouble(BoundingBox::getMiddleY));
     }
 }

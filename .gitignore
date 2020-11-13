@@ -248,3 +248,4 @@ locales/
 /cache/
 /packs/
 /extensions/
+/dump.json

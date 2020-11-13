@@ -56,7 +56,7 @@ import org.geysermc.connector.network.translators.sound.SoundRegistry;
 import org.geysermc.connector.network.translators.world.WorldManager;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
 import org.geysermc.connector.network.translators.world.block.entity.BlockEntityTranslator;
-import org.geysermc.connector.network.translators.world.collision.CollisionTranslator;
+import org.geysermc.connector.network.translators.collision.CollisionTranslator;
 import org.geysermc.connector.event.events.geyser.GeyserStopEvent;
 import org.geysermc.connector.utils.DimensionUtils;
 import org.geysermc.connector.utils.LanguageUtils;
@@ -142,7 +142,6 @@ public class GeyserConnector {
 
         /* Initialize translators and registries */
         BiomeTranslator.init();
-        BlockTranslator.init();
         BlockEntityTranslator.init();
         EffectRegistry.init();
         EntityIdentifierRegistry.init();
@@ -295,7 +294,7 @@ public class GeyserConnector {
             // Make a copy to prevent ConcurrentModificationException
             final List<GeyserSession> tmpPlayers = new ArrayList<>(players);
             for (GeyserSession playerSession : tmpPlayers) {
-                playerSession.disconnect(LanguageUtils.getPlayerLocaleString("geyser.core.shutdown.kick.message", playerSession.getClientData().getLanguageCode()));
+                playerSession.disconnect(LanguageUtils.getPlayerLocaleString("geyser.core.shutdown.kick.message", playerSession.getLocale()));
             }
 
             CompletableFuture<Void> future = CompletableFuture.runAsync(new Runnable() {

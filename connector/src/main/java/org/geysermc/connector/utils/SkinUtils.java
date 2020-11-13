@@ -35,9 +35,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.common.AuthType;
-import org.geysermc.connector.entity.PlayerEntity;
 import org.geysermc.connector.event.EventManager;
 import org.geysermc.connector.event.events.geyser.LoadBedrockSkinEvent;
+import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.session.auth.BedrockClientData;
 
@@ -138,20 +138,21 @@ public class SkinUtils {
                                             entity.getUsername(), false
                                     ), SkinProvider.EMPTY_CAPE, SkinProvider.CapeProvider.VALUES.length * 3);
                                 }
-                        }
+                            }
 
                         SkinProvider.SkinGeometry geometry = entity.getGeometry();
                             if (geometry == null) {
                                 geometry = SkinProvider.SkinGeometry.getLegacy(data.isAlex());
-                        }
+                            }
 
                         geometry = SkinProvider.getOrDefault(SkinProvider.requestBedrockGeometry(
                                 geometry, entity.getUuid(), false
                         ), geometry, 3);
 
-                        // Not a bedrock player check for ears
-                        if (geometry.isFailed() && SkinProvider.ALLOW_THIRD_PARTY_EARS) {
-                            boolean isEars;
+
+                            // Not a bedrock player check for ears
+                            if (geometry.isFailed() && SkinProvider.ALLOW_THIRD_PARTY_EARS) {
+                                boolean isEars ;
 
                             // Its deadmau5, gotta support his skin :)
                             if (entity.getUuid().toString().equals("1e18d5ff-643d-45c8-b509-43b8461d8614")) {
@@ -182,7 +183,7 @@ public class SkinUtils {
                             PlayerListPacket.Entry updatedEntry = buildEntryManually(
                                     session,
                                     entity.getUuid(),
-                                    entity.getUsername(),
+                                    entity.getName(),
                                     entity.getGeyserId(),
                                     skin.getTextureUrl(),
                                     skin.getSkinData(),
@@ -217,6 +218,10 @@ public class SkinUtils {
     }
 
     public static void handleBedrockSkin(PlayerEntity playerEntity, BedrockClientData clientData) {
+        if (EventManager.getInstance().triggerEvent(new LoadBedrockSkinEvent(playerEntity, clientData)).getEvent().isCancelled()) {
+            return;
+        }
+
         GeyserConnector.getInstance().getLogger().info(LanguageUtils.getLocaleStringLog("geyser.skin.bedrock.register", playerEntity.getUsername(), playerEntity.getUuid()));
 
         try {
@@ -262,7 +267,8 @@ public class SkinUtils {
             try {
                 GameProfile.Property skinProperty = profile.getProperty("textures");
 
-                JsonNode skinObject = GeyserConnector.JSON_MAPPER.readTree(new String(Base64.getDecoder().decode(skinProperty.getValue()), StandardCharsets.UTF_8));
+                // TODO: Remove try/catch here
+                JsonNode skinObject = new ObjectMapper().readTree(new String(Base64.getDecoder().decode(skinProperty.getValue()), StandardCharsets.UTF_8));
                 JsonNode textures = skinObject.get("textures");
 
                 JsonNode skinTexture = textures.get("SKIN");
@@ -282,7 +288,16 @@ public class SkinUtils {
                     GeyserConnector.getInstance().getLogger().debug("Got invalid texture data for " + profile.getName() + " " + exception.getMessage());
                 }
                 // return default skin with default cape when texture data is invalid
-                return new GameProfileData((isAlex ? SkinProvider.EMPTY_SKIN_ALEX.getTextureUrl() : SkinProvider.EMPTY_SKIN.getTextureUrl()), SkinProvider.EMPTY_CAPE.getTextureUrl(), isAlex);
+                String skinUrl = isAlex ? SkinProvider.EMPTY_SKIN_ALEX.getTextureUrl() : SkinProvider.EMPTY_SKIN.getTextureUrl();
+                if ("steve".equals(skinUrl) || "alex".equals(skinUrl)) {
+                    for (GeyserSession session : GeyserConnector.getInstance().getPlayers()) {
+                        if (session.getPlayerEntity().getUuid().equals(profile.getId())) {
+                            skinUrl = session.getClientData().getSkinId();
+                            break;
+                        }
+                    }
+                }
+                return new GameProfileData(skinUrl, SkinProvider.EMPTY_CAPE.getTextureUrl(), isAlex);
             }
         }
     }

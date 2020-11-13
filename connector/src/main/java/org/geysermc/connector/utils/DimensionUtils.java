@@ -50,6 +50,10 @@ public class DimensionUtils {
         if (javaDimension.equals(player.getDimension()))
             return;
 
+        if (session.getMovementSendIfIdle() != null) {
+            session.getMovementSendIfIdle().cancel(true);
+        }
+
         session.getEntityCache().removeAllEntities();
         session.getItemFrameCache().clear();
         session.getSkullCache().clear();
@@ -69,7 +73,7 @@ public class DimensionUtils {
         session.setSpawned(false);
         session.setLastChunkPosition(null);
 
-        for (Effect effect : session.getPlayerEntity().getEffectCache().getEntityEffects().keySet()) {
+        for (Effect effect : session.getEffectCache().getEntityEffects().keySet()) {
             MobEffectPacket mobEffectPacket = new MobEffectPacket();
             mobEffectPacket.setEvent(MobEffectPacket.Event.REMOVE);
             mobEffectPacket.setRuntimeEntityId(session.getPlayerEntity().getGeyserId());
@@ -77,7 +81,7 @@ public class DimensionUtils {
             session.sendUpstreamPacket(mobEffectPacket);
         }
         // Effects are re-sent from server
-        session.getPlayerEntity().getEffectCache().getEntityEffects().clear();
+        session.getEffectCache().getEntityEffects().clear();
 
         //let java server handle portal travel sound
         StopSoundPacket stopSoundPacket = new StopSoundPacket();
