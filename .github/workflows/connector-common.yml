@@ -37,20 +37,20 @@ jobs:
       uses: snickerbockers/submodules-init@v4
 
     - name: Build with Maven
-      run: mvn clean install -U -T 2C
+      run: mvn javadoc:jar source:jar deploy -DskipTests -T 2C
 
     - name: Archive artifacts (Geyser Connector)
       uses: actions/upload-artifact@v2
       if: success()
       with:
-          name: connector-1.2.0-SNAPSHOT
-          path: connector\target\connector-1.2.0-SNAPSHOT.jar
+          name: Geyser Connector Folder
+          path: connector\
     - name: Archive artifacts (Geyser Common)
       uses: actions/upload-artifact@v2
       if: success()
       with:
-          name: Geyser Common
-          path: common\target\common-1.2.0-SNAPSHOT.jar
+          name: Geyser Common Folder
+          path: common\target\
     
     - name: Create Release
       id: create_release
@@ -70,8 +70,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: connector\target\connector-1.2.0-SNAPSHOT.jar
-        asset_name: connector-1.2.0-SNAPSHOT.jar
+        asset_path: connector\ 
+        asset_name: connector-folder.zip
         asset_content_type: application/zip
 
     - name: Upload Release Asset 2
@@ -81,7 +81,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: common\target\common-1.2.0-SNAPSHOT.jar
-        asset_name: common-1.2.0-SNAPSHOT.jar
+        asset_path: common\
+        asset_name: common-folder.zip
         asset_content_type: application/zip
         
