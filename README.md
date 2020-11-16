@@ -1,5 +1,5 @@
 ## Warning Do not use master branch it is not tested 
-## Instead use Stable or Test-Move-Fixes Branch VVV
+## Instead use Stable or bundabrg-bleeding Branch VVV
 - (https://github.com/Hellohi3654/Geyser/tree/bundabrg-bleeding)
 - (https://github.com/Hellohi3654/Geyser/tree/Stable)
 
