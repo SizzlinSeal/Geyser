@@ -71,27 +71,18 @@
         </repository>
     </repositories>
 	
-	<servers>
-	<server>
-	<id>central</id>
-	<username>${{ secrets.USERNAME }}</username>
-	<password>${{ secrets.PASSWORD }}</password>
-	</server>
-	<server>
-	<id>snapshots</id>
-	<username>${{ secrets.USERNAME }}</username>
-	<password>${{ secrets.PASSWORD }}</password>
-	</server>
-    </servers>
-	
 	<distributionManagement>
     	<repository>
         <id>central</id>
+	<username>${{ secrets.USERNAME }}</username>
+	<password>${{ secrets.PASSWORD }}</password>
         <name>a0glf1do9xpiq-artifactory-primary-0-releases</name>
         <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid</url>
     </repository>
     <snapshotRepository>
         <id>snapshots</id>
+	<username>${{ secrets.USERNAME }}</username>
+	<password>${{ secrets.PASSWORD }}</password>
         <name>a0glf1do9xpiq-artifactory-primary-0-snapshots</name>
         <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid-snapshots</url>
     </snapshotRepository>
