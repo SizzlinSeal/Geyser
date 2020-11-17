@@ -53,7 +53,6 @@ import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.utils.AttributeUtils;
-import org.geysermc.connector.utils.MessageUtils;
 import org.geysermc.connector.utils.ChunkUtils;
 import org.geysermc.connector.network.translators.chat.MessageTranslator;
 
