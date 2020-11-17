@@ -35,7 +35,6 @@ import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
 import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
 import com.github.steveice10.mc.protocol.data.game.statistic.Statistic;
 import com.github.steveice10.mc.protocol.data.game.window.VillagerTrade;
-import com.github.steveice10.mc.protocol.data.message.MessageSerializer;
 import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
@@ -82,6 +81,7 @@ import org.geysermc.connector.event.events.packet.DownstreamPacketSendEvent;
 import org.geysermc.connector.event.events.packet.UpstreamPacketSendEvent;
 import org.geysermc.connector.entity.player.SessionPlayerEntity;
 import org.geysermc.connector.inventory.PlayerInventory;
+import org.geysermc.connector.network.translators.chat.MessageTranslator;
 import org.geysermc.connector.network.remote.RemoteServer;
 import org.geysermc.connector.network.session.auth.AuthData;
 import org.geysermc.connector.network.session.auth.BedrockClientData;
@@ -565,7 +565,7 @@ public class GeyserSession implements CommandSender {
                             event.getCause().printStackTrace();
                         }
 
-                        upstream.disconnect(MessageUtils.getBedrockMessage(MessageSerializer.fromString(event.getReason())));
+                        upstream.disconnect(MessageTranslator.convertMessageLenient(event.getReason()));
                     }
 
                     @Override

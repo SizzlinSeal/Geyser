@@ -54,6 +54,8 @@ import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.utils.AttributeUtils;
 import org.geysermc.connector.utils.MessageUtils;
+import org.geysermc.connector.utils.ChunkUtils;
+import org.geysermc.connector.network.translators.chat.MessageTranslator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -317,7 +319,7 @@ public class Entity {
                     Message message = (Message) entityMetadata.getValue();
                     if (message != null)
                         // Always translate even if it's a TextMessage since there could be translatable parameters
-                        metadata.put(EntityData.NAMETAG, MessageUtils.getTranslatedBedrockMessage(message, session.getLocale(), true));
+                        metadata.put(EntityData.NAMETAG, MessageTranslator.convertMessage(message.toString(), session.getLocale()));
                 }
                 break;
             case 3: // is custom name visible
