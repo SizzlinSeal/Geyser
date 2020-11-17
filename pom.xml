@@ -2,18 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <servers>
-	<server>
-	<id>central</id>
-	<username>${{ secrets.USERNAME }}</username>
-	<password>${{ secrets.PASSWORD }}</password>
-	</server>
-	<server>
-	<id>snapshots</id>
-	<username>${{ secrets.USERNAME }}</username>
-	<password>${{ secrets.PASSWORD }}</password>
-	</server>
-    </servers>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.geysermc</groupId>
     <artifactId>geyser-parent</artifactId>
