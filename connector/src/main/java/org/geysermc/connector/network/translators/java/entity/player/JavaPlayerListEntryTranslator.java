@@ -80,7 +80,7 @@ public class JavaPlayerListEntryTranslator extends PacketTranslator<ServerPlayer
 
                     playerEntity.setProfile(entry.getProfile());
                     playerEntity.setPlayerList(true);
-                    playerEntity.setDisplayName(entry.getDisplayName() != null ? MessageUtils.getTranslatedBedrockMessage(entry.getDisplayName(), session.getClientData().getLanguageCode()) : null);
+                    playerEntity.setDisplayName(entry.getDisplayName() != null ? MessageTranslator.convertMessage(entry.getDisplayName(), session.getClientData().getLanguageCode()) : null);
 
                     PlayerListPacket.Entry playerListEntry = SkinUtils.buildCachedEntry(session, playerEntity);
 
