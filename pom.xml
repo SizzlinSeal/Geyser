@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.geysermc</groupId>
     <artifactId>geyser-parent</artifactId>
-    <version>parent</version>
+    <version>1.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Geyser</name>
     <description>Allows for players from Minecraft Bedrock Edition to join Minecraft Java Edition servers.</description>
@@ -72,17 +72,17 @@
     </repositories>
 	
 	<distributionManagement>
-        <repository>
-            <id>releases</id>
-            <name>opencollab-releases</name>
-            <url>https://repo.opencollab.dev/maven-releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <name>opencollab-snapshots</name>
-            <url>https://repo.opencollab.dev/maven-snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+    	<repository>
+        <id>central</id>
+        <name>a0glf1do9xpiq-artifactory-primary-0-releases</name>
+        <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid</url>
+    </repository>
+    <snapshotRepository>
+        <id>snapshots</id>
+        <name>a0glf1do9xpiq-artifactory-primary-0-snapshots</name>
+        <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid-snapshots</url>
+    </snapshotRepository>
+</distributionManagement>
 
     <dependencies>
         <dependency>
