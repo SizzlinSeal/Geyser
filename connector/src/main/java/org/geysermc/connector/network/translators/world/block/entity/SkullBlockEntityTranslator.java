@@ -26,15 +26,10 @@
 package org.geysermc.connector.network.translators.world.block.entity;
 
 import com.github.steveice10.mc.auth.data.GameProfile;
-import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
 import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.github.steveice10.opennbt.tag.builtin.ListTag;
 import com.github.steveice10.opennbt.tag.builtin.StringTag;
 import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.nbt.NbtMap;
-import com.nukkitx.nbt.NbtMapBuilder;
-import com.nukkitx.protocol.bedrock.data.entity.EntityData;
-import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.nbt.NbtMapBuilder;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
@@ -76,11 +71,6 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
 		catch(InterruptedException ex) {
 		Thread.currentThread().interrupt();
 		}
-    }
-
-        }
-        builder.put("Rotation", rotation);
-        builder.put("SkullType", skullVariant);
     }
 
     public static GameProfile getProfile(CompoundTag tag) {
