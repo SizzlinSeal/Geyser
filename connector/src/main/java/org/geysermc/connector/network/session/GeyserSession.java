@@ -138,8 +138,9 @@ public class GeyserSession implements CommandSender {
      * Stores session collision
      */
     private final CollisionManager collisionManager;
-
     private final Map<Vector3i, SkullPlayerEntity> skullCache = new ConcurrentHashMap<>();
+    
+    @Getter
     private final Long2ObjectMap<ClientboundMapItemDataPacket> storedMaps = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 
     /**
