@@ -26,26 +26,24 @@
 package org.geysermc.connector.network.translators.world.block.entity;
 
 import com.github.steveice10.mc.auth.data.GameProfile;
-import com.github.steveice10.mc.protocol.data.game.entity.metadata.Position;
 import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.github.steveice10.opennbt.tag.builtin.ListTag;
 import com.github.steveice10.opennbt.tag.builtin.StringTag;
 import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.nbt.NbtMap;
+import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.nbt.NbtMapBuilder;
-import com.nukkitx.protocol.bedrock.data.entity.EntityData;
-import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
 import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.GeyserConnector;
+import org.geysermc.connector.entity.player.SkullPlayerEntity;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.world.block.BlockStateValues;
-import org.geysermc.connector.utils.SkinProvider;
 import org.geysermc.connector.utils.SkinUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @BlockEntity(name = "Skull", regex = "skull")
@@ -59,7 +57,6 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
 
     @Override
     public void translateTag(NbtMapBuilder builder, CompoundTag tag, int blockState) {
-        Map<String, Object> tags = new HashMap<>();
         byte skullVariant = BlockStateValues.getSkullVariant(blockState);
         float rotation = BlockStateValues.getSkullRotation(blockState) * 22.5f;
         // Just in case...
@@ -76,7 +73,7 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
 		}
     }
 
-    public static GameProfile getProfile(CompoundTag tag, GeyserSession session) {
+    public static GameProfile getProfile(CompoundTag tag) {
         if (tag.contains("SkullOwner")) {
             CompoundTag owner = tag.get("SkullOwner");
             CompoundTag Properties = owner.get("Properties");
@@ -95,18 +92,23 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
         return null;
     }
 
-    public static void spawnPlayer(GeyserSession session, CompoundTag tag, int blockState) {
-        float x = (int) tag.get("x").getValue() + .5f;
-        float y = (int) tag.get("y").getValue() - .01f;
-        float z = (int) tag.get("z").getValue() + .5f;
+    public static void spawnPlayer(GeyserSession session, com.github.steveice10.opennbt.tag.builtin.CompoundTag tag, int blockState) {
+        int posX = (int) tag.get("x").getValue();
+        int posY = (int) tag.get("y").getValue();
+        int posZ = (int) tag.get("z").getValue();
+        float x = posX + .5f;
+        float y = posY - .01f;
+        float z = posZ + .5f;
         float rotation = 0f;
 
-        if (BlockStateValues.getSkullRotation(blockState) == -1) {
+        byte floorRotation = BlockStateValues.getSkullRotation(blockState);
+        if (floorRotation == -1) {
+            // Wall skull
             y += 0.25f;
             switch (BlockStateValues.getWallSkullDirection().get(blockState)) {
                 case "north":
                     rotation = 180f;
-                    z += 0.24;
+                    z += 0.24f;
                     break;
                 case "south":
                     rotation = 0;
@@ -122,12 +124,12 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
                     break;
             }
         } else {
-            rotation = (180f + ((BlockStateValues.getSkullRotation(blockState)) * 22.5f)) % 360;
+            rotation = (180f + (floorRotation * 22.5f)) % 360;
         }
 
         long geyserId = session.getEntityCache().getNextEntityId().incrementAndGet();
 
-        GameProfile gameProfile = getProfile(tag, session);
+        GameProfile gameProfile = getProfile(tag);
 
         if (gameProfile == null) {
             return;
@@ -135,35 +137,20 @@ public class SkullBlockEntityTranslator extends BlockEntityTranslator implements
 
         Vector3f rotationVector = Vector3f.from(rotation, 0, rotation);
 
-        PlayerEntity player = new PlayerEntity(gameProfile, 1, geyserId, Vector3f.from(x, y, z), Vector3f.ZERO, rotationVector);
-        player.setPlayerList(false);
-        player.setGeometry(SkinProvider.SkinGeometry.getSkull());
-
-        //Set bounding box to almost nothing so the skull is able to be broken and not cause entity to cast a shadow
-        EntityDataMap metadata = new EntityDataMap();
-        metadata.put(EntityData.SCALE, 1.08f);
-        metadata.put(EntityData.BOUNDING_BOX_HEIGHT, 0.001f);
-        metadata.put(EntityData.BOUNDING_BOX_WIDTH, 0.001f);
-        metadata.getOrCreateFlags().setFlag(EntityFlag.CAN_SHOW_NAME, false);
-        metadata.getOrCreateFlags().setFlag(EntityFlag.INVISIBLE, true);
-
-        player.setMetadata(metadata);
+        SkullPlayerEntity player = new SkullPlayerEntity(gameProfile, geyserId, Vector3f.from(x, y, z), rotationVector);
 
         // Cache entity
-        session.getSkullCache().put(new Position((int) tag.get("x").getValue(), (int) tag.get("y").getValue(), (int) tag.get("z").getValue()), player);
+        session.getSkullCache().put(Vector3i.from(posX, posY, posZ), player);
 
         // Only send to session if we are initialized, otherwise it will happen then.
         if (session.getUpstream().isInitialized()) {
             player.spawnEntity(session);
 
             SkinUtils.requestAndHandleSkinAndCape(player, session, (skinAndCape -> session.getConnector().getGeneralThreadPool().schedule(() -> {
+                // Delay to minimize split-second "player" pop-in
                 player.getMetadata().getFlags().setFlag(EntityFlag.INVISIBLE, false);
                 player.updateBedrockMetadata(session);
-            }, 2, TimeUnit.SECONDS)));
+            }, 250, TimeUnit.MILLISECONDS)));
         }
-    }
-
-    public static boolean containsCustomSkull(Position position, GeyserSession session) {
-        return session.getSkullCache().containsKey(position);
     }
 }
