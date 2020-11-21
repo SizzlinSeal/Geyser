@@ -70,7 +70,7 @@ import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.command.CommandSender;
 import org.geysermc.connector.common.AuthType;
 import org.geysermc.connector.entity.Entity;
-import org.geysermc.connector.entity.player.PlayerEntity;
+import org.geysermc.connector.entity.PlayerEntity;
 import org.geysermc.connector.event.EventManager;
 import org.geysermc.connector.event.EventResult;
 import org.geysermc.connector.event.events.geyser.GeyserLoginEvent;
@@ -762,6 +762,21 @@ public class GeyserSession implements CommandSender {
         startGamePacket.setVanillaVersion("*");
         startGamePacket.setAuthoritativeMovementMode(AuthoritativeMovementMode.CLIENT);
         sendUpstreamPacket(startGamePacket);
+    }
+
+    public void addTeleport(TeleportCache teleportCache) {
+        teleportMap.put(teleportCache.getTeleportConfirmId(), teleportCache);
+
+        ObjectIterator<Int2ObjectMap.Entry<TeleportCache>> it = teleportMap.int2ObjectEntrySet().iterator();
+
+        // Remove any teleports with a higher number - maybe this is a world change that reset the ID to 0?
+        while (it.hasNext()) {
+            Int2ObjectMap.Entry<TeleportCache> entry = it.next();
+            int nextID = entry.getValue().getTeleportConfirmId();
+            if (nextID > teleportCache.getTeleportConfirmId()) {
+                it.remove();
+            }
+        }
     }
 
     public void addTeleport(TeleportCache teleportCache) {
