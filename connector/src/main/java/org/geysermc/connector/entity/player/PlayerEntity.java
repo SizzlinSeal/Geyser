@@ -72,8 +72,6 @@ public class PlayerEntity extends LivingEntity {
     private String displayName;
     private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
-	
-    private SkinProvider.SkinGeometry geometry;
 
     /**
      * Saves the parrot currently on the player's left shoulder; otherwise null

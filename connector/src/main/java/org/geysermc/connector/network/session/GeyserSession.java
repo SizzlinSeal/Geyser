@@ -133,7 +133,6 @@ public class GeyserSession implements CommandSender {
     private WorldCache worldCache;
     private WindowCache windowCache;
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
-    private Map<Position, PlayerEntity> skullCache = new ConcurrentHashMap<>();
 
     /**
      * Stores session collision
@@ -762,6 +761,21 @@ public class GeyserSession implements CommandSender {
         startGamePacket.setVanillaVersion("*");
         startGamePacket.setAuthoritativeMovementMode(AuthoritativeMovementMode.CLIENT);
         sendUpstreamPacket(startGamePacket);
+    }
+
+    public void addTeleport(TeleportCache teleportCache) {
+        teleportMap.put(teleportCache.getTeleportConfirmId(), teleportCache);
+
+        ObjectIterator<Int2ObjectMap.Entry<TeleportCache>> it = teleportMap.int2ObjectEntrySet().iterator();
+
+        // Remove any teleports with a higher number - maybe this is a world change that reset the ID to 0?
+        while (it.hasNext()) {
+            Int2ObjectMap.Entry<TeleportCache> entry = it.next();
+            int nextID = entry.getValue().getTeleportConfirmId();
+            if (nextID > teleportCache.getTeleportConfirmId()) {
+                it.remove();
+            }
+        }
     }
 
     public void addTeleport(TeleportCache teleportCache) {
