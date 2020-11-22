@@ -42,6 +42,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.MessageDigest;
@@ -180,7 +181,7 @@ public class FileUtils {
         byte[] sha256;
 
         try {
-            sha256 = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file.toPath()));
+            sha256 = MessageDigest.getInstance("SHA-256").digest(readAllBytes(file));
         } catch (Exception e) {
             throw new RuntimeException("Could not calculate pack hash", e);
         }
@@ -198,7 +199,7 @@ public class FileUtils {
         byte[] sha1;
 
         try {
-            sha1 = MessageDigest.getInstance("SHA-1").digest(Files.readAllBytes(file.toPath()));
+            sha1 = MessageDigest.getInstance("SHA-1").digest(readAllBytes(file));
         } catch (Exception e) {
             throw new RuntimeException("Could not calculate pack hash", e);
         }
@@ -221,5 +222,23 @@ public class FileUtils {
         } catch (IOException e) { }
 
         return reflections;
+    }
+
+    /**
+     * An android compatible version of {@link Files#readAllBytes}
+     *
+     * @param file File to read bytes of
+     * @return The byte array of the file
+     */
+    public static byte[] readAllBytes(File file) {
+        int size = (int) file.length();
+        byte[] bytes = new byte[size];
+        try {
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
+            buf.read(bytes, 0, bytes.length);
+            buf.close();
+        } catch (IOException ignored) { }
+
+        return bytes;
     }
 }
