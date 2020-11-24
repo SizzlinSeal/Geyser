@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.util.*;
 
 public class BlockTranslator {
+    public static final NbtList<NbtMap> BLOCKS;
     /**
      * The Java block runtime ID of air
      */
@@ -73,6 +74,7 @@ public class BlockTranslator {
     public static final Int2DoubleMap JAVA_RUNTIME_ID_TO_HARDNESS = new Int2DoubleOpenHashMap();
     public static final Int2BooleanMap JAVA_RUNTIME_ID_TO_CAN_HARVEST_WITH_HAND = new Int2BooleanOpenHashMap();
     public static final Int2ObjectMap<String> JAVA_RUNTIME_ID_TO_TOOL_TYPE = new Int2ObjectOpenHashMap<>();
+    public static final Int2ObjectMap<String> JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR = new Int2ObjectOpenHashMap<>();
 
     // The index of the collision data in collision.json
     public static final Int2IntMap JAVA_RUNTIME_ID_TO_COLLISION_INDEX = new Int2IntOpenHashMap();
@@ -86,6 +88,11 @@ public class BlockTranslator {
      * Runtime command block ID, used for fixing command block minecart appearances
      */
     public static final int BEDROCK_RUNTIME_COMMAND_BLOCK_ID;
+
+    /**
+     * Runtime moving Block ID, used for blocks moved by pistons
+     */
+    public static int BEDROCK_RUNTIME_MOVING_BLOCK_ID;
 
     // For block breaking animation math
     public static final IntSet JAVA_RUNTIME_WOOL_IDS = new IntOpenHashSet();
@@ -106,6 +113,7 @@ public class BlockTranslator {
         try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(stream))) {
             NbtMap blockPalette = (NbtMap) nbtInputStream.readTag();
             blocksTag = (NbtList<NbtMap>) blockPalette.getList("blocks", NbtType.COMPOUND);
+            BLOCKS = blocksTag;
         } catch (Exception e) {
             throw new AssertionError("Unable to get blocks from runtime block states", e);
         }
@@ -191,6 +199,15 @@ public class BlockTranslator {
                 JAVA_RUNTIME_ID_TO_COLLISION_INDEX.put(javaRuntimeId, collisionIndexNode.intValue());
             }
 
+            if (javaId.contains("obsidian") || javaId.contains("respawn_anchor")) {
+                // Override obsidian, crying_obsidian, and respawn_anchor to block piston movement
+                JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR.put(javaRuntimeId, "block");
+            } else {
+                JsonNode pistonBehaviorNode = entry.getValue().get("piston_behavior");
+                if (pistonBehaviorNode != null) {
+                    JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR.put(javaRuntimeId, pistonBehaviorNode.textValue());
+                }
+            }
             JAVA_ID_BLOCK_MAP.put(javaId, javaRuntimeId);
 
             // Used for adding all "special" Java block states to block state map
@@ -297,12 +314,20 @@ public class BlockTranslator {
         }
         BEDROCK_AIR_ID = airRuntimeId;
 
-        // Loop around again to find all item frame runtime IDs
+        // Loop around again to find all item frame runtime IDs and movingBlock's runtime ID
+        int movingBlockId = -1;
         for (Object2IntMap.Entry<NbtMap> entry : blockStateOrderedMap.object2IntEntrySet()) {
             if (entry.getKey().getString("name").equals("minecraft:frame")) {
                 ITEM_FRAMES.put(entry.getKey(), entry.getIntValue());
+            } else if (entry.getKey().getString("name").equals("minecraft:movingBlock")) {
+                movingBlockId = entry.getIntValue();
             }
         }
+
+        if (movingBlockId == -1) {
+            throw new AssertionError("Unable to find moving block in palette");
+        }
+        BEDROCK_RUNTIME_MOVING_BLOCK_ID = movingBlockId;
     }
 
     private BlockTranslator() {
