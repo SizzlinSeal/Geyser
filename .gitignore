@@ -247,5 +247,5 @@ locales/
 # Note: Manually edited to change cache/ to /cache/
 /cache/
 /packs/
-/extensions/
 /dump.json
+/extensions/

@@ -76,13 +76,13 @@
         <id>central</id>
         <name>a0glf1do9xpiq-artifactory-primary-0-releases</name>
         <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid</url>
-    </repository>
-    <snapshotRepository>
+		</repository>
+		<snapshotRepository>
         <id>snapshots</id>
         <name>a0glf1do9xpiq-artifactory-primary-0-snapshots</name>
         <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid-snapshots</url>
-    </snapshotRepository>
-</distributionManagement>
+		</snapshotRepository>
+	</distributionManagement>
 
     <dependencies>
         <dependency>

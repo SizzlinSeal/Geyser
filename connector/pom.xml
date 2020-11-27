@@ -9,6 +9,7 @@
         <version>1.2.1-SNAPSHOT</version>
     </parent>
     <artifactId>connector</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>org.geysermc</groupId>
@@ -31,7 +32,7 @@
         <dependency>
             <groupId>com.github.CloudburstMC.Protocol</groupId>
             <artifactId>bedrock-v419</artifactId>
-            <version>ce59d39118</version>
+            <version>fe8d93cca6dd3de55231b1966ccd1afa08ee90ec</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
