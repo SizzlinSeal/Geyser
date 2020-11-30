@@ -69,8 +69,6 @@ public class PlayerEntity extends LivingEntity {
     private GameProfile profile;
     private UUID uuid;
     private String username;
-    private String displayName;
-    private long lastSkinUpdate = -1;
     private boolean playerList = true;  // Player is in the player list
 
     /**

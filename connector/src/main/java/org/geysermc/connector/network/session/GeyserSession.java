@@ -91,6 +91,7 @@ import org.geysermc.connector.network.translators.collision.CollisionManager;
 import org.geysermc.connector.network.translators.inventory.EnchantmentInventoryTranslator;
 import org.geysermc.connector.network.translators.item.ItemRegistry;
 import org.geysermc.connector.network.translators.world.block.entity.PistonBlockEntity;
+import org.geysermc.connector.skin.SkinManager;
 import org.geysermc.connector.utils.*;
 import org.geysermc.floodgate.util.BedrockData;
 import org.geysermc.floodgate.util.EncryptionUtil;
@@ -575,7 +576,29 @@ public class GeyserSession implements CommandSender {
                     @Override
                     public void packetReceived(PacketReceivedEvent event) {
                         if (!closed) {
-                            handleDownstreamPacket(event.getPacket());
+                            //handle consecutive respawn packets
+                            if (event.getPacket().getClass().equals(ServerRespawnPacket.class)) {
+                                manyDimPackets = lastDimPacket != null;
+                                lastDimPacket = event.getPacket();
+                                return;
+                            } else if (lastDimPacket != null) {
+                                PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(lastDimPacket.getClass(), lastDimPacket, GeyserSession.this);
+                                lastDimPacket = null;
+                            }
+
+                            // Required, or else Floodgate players break with Bukkit chunk caching
+                            if (event.getPacket() instanceof LoginSuccessPacket) {
+                                GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
+                                playerEntity.setUsername(profile.getName());
+                                playerEntity.setUuid(profile.getId());
+
+                                // Check if they are not using a linked account
+                                if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
+                                    SkinManager.handleBedrockSkin(playerEntity, clientData);
+                                }
+                            }
+
+                            PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);
                         }
                     }
 
