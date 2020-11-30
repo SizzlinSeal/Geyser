@@ -378,7 +378,7 @@ public class GeyserSession implements CommandSender {
 
         PlayerListPacket playerListPacket = new PlayerListPacket();
         playerListPacket.setAction(PlayerListPacket.Action.ADD);
-        playerListPacket.getEntries().add(SkinUtils.buildCachedEntry(this, playerEntity));
+        playerListPacket.getEntries().add(SkinManager.buildCachedEntry(this, playerEntity));
         sendUpstreamPacket(playerListPacket);
 
         startGame();
@@ -537,7 +537,7 @@ public class GeyserSession implements CommandSender {
                         for (Entity entity : getEntityCache().getEntities().values()) {
                             if (!entity.isValid()) {
                                 if (entity instanceof PlayerEntity) {
-                                    SkinUtils.requestAndHandleSkinAndCape((PlayerEntity) entity, GeyserSession.this, null);
+                                    SkinManager.requestAndHandleSkinAndCape((PlayerEntity) entity, GeyserSession.this, null);
                                 }
                                 entity.spawnEntity(GeyserSession.this);
                             }
@@ -547,7 +547,7 @@ public class GeyserSession implements CommandSender {
                         for (PlayerEntity entity : getSkullCache().values()) {
                             entity.spawnEntity(GeyserSession.this);
 
-                            SkinUtils.requestAndHandleSkinAndCape(entity, GeyserSession.this, (skinAndCape) -> getConnector().getGeneralThreadPool().schedule(() -> {
+                            SkinManager.requestAndHandleSkinAndCape(entity, GeyserSession.this, (skinAndCape) -> getConnector().getGeneralThreadPool().schedule(() -> {
                                 entity.getMetadata().getFlags().setFlag(EntityFlag.INVISIBLE, false);
                                 entity.updateBedrockMetadata(GeyserSession.this);
                             }, 2, TimeUnit.SECONDS));
@@ -644,7 +644,7 @@ public class GeyserSession implements CommandSender {
 
             // Check if they are not using a linked account
             if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
-                SkinUtils.handleBedrockSkin(playerEntity, clientData);
+                SkinManager.handleBedrockSkin(playerEntity, clientData);
             }
         }
         EventResult<DownstreamPacketReceiveEvent<?>> result = EventManager.getInstance().triggerEvent(DownstreamPacketReceiveEvent.of(this, packet));
