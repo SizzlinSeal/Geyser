@@ -32,7 +32,6 @@ import org.geysermc.connector.network.translators.PacketTranslator;
 import org.geysermc.connector.network.translators.Translator;
 import org.geysermc.connector.network.translators.chat.MessageTranslator;
 import org.geysermc.connector.utils.LocaleUtils;
-import org.geysermc.connector.utils.SkinUtils;
 import org.geysermc.connector.skin.SkinManager;
 
 import com.github.steveice10.mc.protocol.data.game.PlayerListEntry;
