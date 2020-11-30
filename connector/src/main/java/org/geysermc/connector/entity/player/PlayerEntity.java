@@ -55,8 +55,8 @@ import org.geysermc.connector.scoreboard.Team;
 import org.geysermc.connector.utils.AttributeUtils;
 import org.geysermc.connector.network.session.cache.EntityEffectCache;
 import org.geysermc.connector.network.translators.chat.MessageTranslator;
-import org.geysermc.connector.utils.SkinProvider;
-import org.geysermc.connector.utils.SkinUtils;
+import org.geysermc.connector.skin.SkinProvider;
+import org.geysermc.connector.skin.SkinManager;
 
 import java.util.ArrayList;
 import java.util.List;
