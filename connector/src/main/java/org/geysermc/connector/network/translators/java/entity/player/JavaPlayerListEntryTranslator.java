@@ -82,8 +82,7 @@ public class JavaPlayerListEntryTranslator extends PacketTranslator<ServerPlayer
 
                     playerEntity.setProfile(entry.getProfile());
                     playerEntity.setPlayerList(true);
-
-                    playerEntity.setDisplayName(entry.getDisplayName() != null ? LocaleUtils.getLocaleString(entry.getDisplayName().toString(), session.getClientData().getLanguageCode()) : null);
+                    playerEntity.setValid(true);
 
                     PlayerListPacket.Entry playerListEntry = SkinManager.buildCachedEntry(session, playerEntity);
 
