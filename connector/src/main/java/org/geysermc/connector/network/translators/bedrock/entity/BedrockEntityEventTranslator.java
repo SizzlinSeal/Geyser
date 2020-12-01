@@ -43,13 +43,13 @@ public class BedrockEntityEventTranslator extends PacketTranslator<EntityEventPa
     public void translate(EntityEventPacket packet, GeyserSession session) {
         System.out.println(packet.toString());
         switch (packet.getType()) {
-            // Resend the packet so we get the eating sounds
             case EATING_ITEM:
+                // Resend the packet so we get the eating sounds
                 session.sendUpstreamPacket(packet);
                 return;
             case COMPLETE_TRADE:
                 ClientSelectTradePacket selectTradePacket = new ClientSelectTradePacket(packet.getData());
-                session.getDownstream().getSession().send(selectTradePacket);
+                session.sendDownstreamPacket(selectTradePacket);
 
                 Entity villager = session.getPlayerEntity();
                 Inventory openInventory = session.getInventoryCache().getOpenInventory();
