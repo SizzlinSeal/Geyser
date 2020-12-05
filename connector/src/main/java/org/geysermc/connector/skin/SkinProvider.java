@@ -100,10 +100,6 @@ public class SkinProvider {
         String skullData = new String(FileUtils.readAllBytes(FileUtils.getResource("bedrock/skin/geometry.humanoid.customskull.json")), StandardCharsets.UTF_8);
         SKULL_GEOMETRY = new SkinGeometry("{\"geometry\" :{\"default\" :\"geometry.humanoid.customskull\"}}", skullData, false);
 
-        /* Load in the custom skull geometry */
-        String skullData = new String(FileUtils.readAllBytes(FileUtils.getResource("bedrock/skin/geometry.humanoid.customskull.json")), StandardCharsets.UTF_8);
-        SKULL_GEOMETRY = new SkinGeometry("{\"geometry\" :{\"default\" :\"geometry.humanoid.customskull\"}}", skullData, false);
-
         // Schedule Daily Image Expiry if we are caching them
         if (GeyserConnector.getInstance().getConfig().getCacheImages() > 0) {
             GeyserConnector.getInstance().getGeneralThreadPool().scheduleAtFixedRate(() -> {
