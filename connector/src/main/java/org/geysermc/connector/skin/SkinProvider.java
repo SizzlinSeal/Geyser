@@ -44,10 +44,12 @@ import org.geysermc.connector.utils.WebUtils;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
@@ -89,35 +91,14 @@ public class SkinProvider {
 
     static {
         /* Load in the normal ears geometry */
-        InputStream earsStream = FileUtils.getResource("bedrock/skin/geometry.humanoid.ears.json");
-
-        StringBuilder earsDataBuilder = new StringBuilder();
-        try (Reader reader = new BufferedReader(new InputStreamReader(earsStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
-            int c = 0;
-            while ((c = reader.read()) != -1) {
-                earsDataBuilder.append((char) c);
-            }
-        } catch (IOException e) {
-            throw new AssertionError("Unable to load ears geometry", e);
-        }
-
-        EARS_GEOMETRY = earsDataBuilder.toString();
-
+        EARS_GEOMETRY = new String(FileUtils.readAllBytes(FileUtils.getResource("bedrock/skin/geometry.humanoid.ears.json")), StandardCharsets.UTF_8);
 
         /* Load in the slim ears geometry */
-        earsStream = FileUtils.getResource("bedrock/skin/geometry.humanoid.earsSlim.json");
+        EARS_GEOMETRY_SLIM = new String(FileUtils.readAllBytes(FileUtils.getResource("bedrock/skin/geometry.humanoid.earsSlim.json")), StandardCharsets.UTF_8);
 
-        earsDataBuilder = new StringBuilder();
-        try (Reader reader = new BufferedReader(new InputStreamReader(earsStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
-            int c = 0;
-            while ((c = reader.read()) != -1) {
-                earsDataBuilder.append((char) c);
-            }
-        } catch (IOException e) {
-            throw new AssertionError("Unable to load ears geometry", e);
-        }
-
-        EARS_GEOMETRY_SLIM = earsDataBuilder.toString();
+        /* Load in the custom skull geometry */
+        String skullData = new String(FileUtils.readAllBytes(FileUtils.getResource("bedrock/skin/geometry.humanoid.customskull.json")), StandardCharsets.UTF_8);
+        SKULL_GEOMETRY = new SkinGeometry("{\"geometry\" :{\"default\" :\"geometry.humanoid.customskull\"}}", skullData, false);
 
         /* Load in the custom skull geometry */
         InputStream skullStream = FileUtils.getResource("bedrock/skin/geometry.humanoid.customskull.json");
@@ -503,7 +484,7 @@ public class SkinProvider {
                 // Get textures from UUID
                 node = WebUtils.getJson("https://sessionserver.mojang.com/session/minecraft/profile/" + uuidToString);
                 List<GameProfile.Property> profileProperties = new ArrayList<>();
-                JsonNode properties = node.get("Properties");
+                JsonNode properties = node.get("properties");
                 if (properties == null) {
                     GeyserConnector.getInstance().getLogger().debug("No properties found in Mojang response for " + uuidToString);
                     return null;

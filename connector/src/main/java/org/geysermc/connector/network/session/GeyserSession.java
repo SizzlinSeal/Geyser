@@ -67,7 +67,6 @@ import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.command.CommandSender;
 import org.geysermc.connector.common.AuthType;
 import org.geysermc.connector.entity.Entity;
-import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.entity.player.SkullPlayerEntity;
 import org.geysermc.connector.entity.player.SessionPlayerEntity;
 import org.geysermc.connector.event.EventManager;
@@ -138,9 +137,8 @@ public class GeyserSession implements CommandSender {
      * Stores session collision
      */
     private final CollisionManager collisionManager;
+
     private final Map<Vector3i, SkullPlayerEntity> skullCache = new ConcurrentHashMap<>();
-    
-    @Getter
     private final Long2ObjectMap<ClientboundMapItemDataPacket> storedMaps = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 
     /**
