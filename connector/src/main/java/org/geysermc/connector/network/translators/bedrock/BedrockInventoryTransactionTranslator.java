@@ -203,7 +203,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         blockBreakPacket.setPosition(packet.getBlockPosition().toFloat());
                         blockBreakPacket.setData(BlockTranslator.getBedrockBlockId(blockState));
                         session.sendUpstreamPacket(blockBreakPacket);
-                        session.setBreakingBlock(BlockTranslator.AIR);
+                        session.setBreakingBlock(BlockTranslator.BEDROCK_AIR_ID);
 
                         long frameEntityId = ItemFrameEntity.getItemFrameEntityId(session, packet.getBlockPosition());
                         if (frameEntityId != -1 && session.getEntityCache().getEntityByJavaId(frameEntityId) != null) {
