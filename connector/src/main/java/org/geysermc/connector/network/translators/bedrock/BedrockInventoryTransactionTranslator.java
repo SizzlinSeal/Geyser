@@ -42,10 +42,7 @@ import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerType;
-import com.nukkitx.protocol.bedrock.packet.ContainerOpenPacket;
-import com.nukkitx.protocol.bedrock.packet.InventorySlotPacket;
-import com.nukkitx.protocol.bedrock.packet.InventoryTransactionPacket;
-import com.nukkitx.protocol.bedrock.packet.LevelEventPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import org.geysermc.connector.entity.CommandBlockMinecartEntity;
 import org.geysermc.connector.entity.Entity;
 import org.geysermc.connector.entity.ItemFrameEntity;
@@ -66,6 +63,10 @@ import org.geysermc.connector.utils.InventoryUtils;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * BedrockInventoryTransactionTranslator handles most interactions between the client and the world,
+ * or the client and their inventory.
+ */
 @Translator(packet = InventoryTransactionPacket.class)
 public class BedrockInventoryTransactionTranslator extends PacketTranslator<InventoryTransactionPacket> {
 
@@ -191,18 +192,18 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         session.sendDownstreamPacket(useItemPacket);
                         break;
                     case 2:
-                        int blockState = session.getConnector().getWorldManager().getBlockAt(session, packet.getBlockPosition().getX(), packet.getBlockPosition().getY(), packet.getBlockPosition().getZ());
-                        double blockHardness = BlockTranslator.JAVA_RUNTIME_ID_TO_HARDNESS.get(blockState);
-                        if (session.getGameMode() == GameMode.CREATIVE || (session.getConnector().getConfig().isCacheChunks() && blockHardness == 0)) {
-                            session.setLastBlockPlacedId(null);
-                            session.setLastBlockPlacePosition(null);
+                        int blockState = session.getGameMode() == GameMode.CREATIVE ?
+                                session.getConnector().getWorldManager().getBlockAt(session, packet.getBlockPosition()) : session.getBreakingBlock();
 
-                            LevelEventPacket blockBreakPacket = new LevelEventPacket();
-                            blockBreakPacket.setType(LevelEventType.PARTICLE_DESTROY_BLOCK);
-                            blockBreakPacket.setPosition(packet.getBlockPosition().toFloat());
-                            blockBreakPacket.setData(BlockTranslator.getBedrockBlockId(blockState));
-                            session.sendUpstreamPacket(blockBreakPacket);
-                        }
+                        session.setLastBlockPlacedId(null);
+                        session.setLastBlockPlacePosition(null);
+
+                        LevelEventPacket blockBreakPacket = new LevelEventPacket();
+                        blockBreakPacket.setType(LevelEventType.PARTICLE_DESTROY_BLOCK);
+                        blockBreakPacket.setPosition(packet.getBlockPosition().toFloat());
+                        blockBreakPacket.setData(BlockTranslator.getBedrockBlockId(blockState));
+                        session.sendUpstreamPacket(blockBreakPacket);
+                        session.setBreakingBlock(BlockTranslator.AIR);
 
                         long frameEntityId = ItemFrameEntity.getItemFrameEntityId(session, packet.getBlockPosition());
                         if (frameEntityId != -1 && session.getEntityCache().getEntityByJavaId(frameEntityId) != null) {
