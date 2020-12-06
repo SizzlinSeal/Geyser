@@ -186,7 +186,7 @@ public class BedrockActionTranslator extends PacketTranslator<PlayerActionPacket
                 stopBreak.setType(LevelEventType.BLOCK_STOP_BREAK);
                 stopBreak.setPosition(vector.toFloat());
                 stopBreak.setData(0);
-                session.setBreakingBlock(BlockTranslator.AIR);
+                session.setBreakingBlock(BlockTranslator.BEDROCK_AIR_ID);
                 session.sendUpstreamPacket(stopBreak);
                 break;
             case STOP_BREAK:
