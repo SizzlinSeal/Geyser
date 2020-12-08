@@ -32,8 +32,6 @@ import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslator;
 import org.geysermc.connector.network.translators.Translator;
 import org.geysermc.connector.skin.SkinManager;
-
-import java.util.concurrent.TimeUnit;
 import org.geysermc.connector.skin.SkullSkinManager;
 
 @Translator(packet = SetLocalPlayerAsInitializedPacket.class)

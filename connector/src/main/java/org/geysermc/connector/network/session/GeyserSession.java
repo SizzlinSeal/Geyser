@@ -50,7 +50,6 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.data.*;
 import com.nukkitx.protocol.bedrock.data.command.CommandPermission;
-import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
 import com.nukkitx.protocol.bedrock.packet.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -69,7 +68,6 @@ import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.command.CommandSender;
 import org.geysermc.connector.common.AuthType;
 import org.geysermc.connector.entity.Entity;
-import org.geysermc.connector.entity.player.PlayerEntity;
 import org.geysermc.connector.entity.player.SkullPlayerEntity;
 import org.geysermc.connector.entity.player.SessionPlayerEntity;
 import org.geysermc.connector.event.EventManager;
@@ -98,8 +96,6 @@ import org.geysermc.floodgate.util.BedrockData;
 import org.geysermc.floodgate.util.EncryptionUtil;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -531,25 +527,6 @@ public class GeyserSession implements CommandSender {
                         // Download and load the language for the player
                         LocaleUtils.downloadAndLoadLocale(locale);
 
-                        for (Entity entity : getEntityCache().getEntities().values()) {
-                            if (!entity.isValid()) {
-                                if (entity instanceof PlayerEntity) {
-                                    SkinManager.requestAndHandleSkinAndCape((PlayerEntity) entity, GeyserSession.this, null);
-                                }
-                                entity.spawnEntity(GeyserSession.this);
-                            }
-                        }
-
-                        // Send Skulls
-                        for (PlayerEntity entity : getSkullCache().values()) {
-                            entity.spawnEntity(GeyserSession.this);
-
-                            SkinManager.requestAndHandleSkinAndCape(entity, GeyserSession.this, (skinAndCape) -> getConnector().getGeneralThreadPool().schedule(() -> {
-                                entity.getMetadata().getFlags().setFlag(EntityFlag.INVISIBLE, false);
-                                entity.updateBedrockMetadata(GeyserSession.this);
-                            }, 2, TimeUnit.SECONDS));
-                        }
-
                         // Register plugin channels
                         connector.getGeneralThreadPool().schedule(() -> {
                             for (String channel : getConnector().getRegisteredPluginChannels()) {
@@ -573,29 +550,7 @@ public class GeyserSession implements CommandSender {
                     @Override
                     public void packetReceived(PacketReceivedEvent event) {
                         if (!closed) {
-                            //handle consecutive respawn packets
-                            if (event.getPacket().getClass().equals(ServerRespawnPacket.class)) {
-                                manyDimPackets = lastDimPacket != null;
-                                lastDimPacket = event.getPacket();
-                                return;
-                            } else if (lastDimPacket != null) {
-                                PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(lastDimPacket.getClass(), lastDimPacket, GeyserSession.this);
-                                lastDimPacket = null;
-                            }
-
-                            // Required, or else Floodgate players break with Bukkit chunk caching
-                            if (event.getPacket() instanceof LoginSuccessPacket) {
-                                GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
-                                playerEntity.setUsername(profile.getName());
-                                playerEntity.setUuid(profile.getId());
-
-                                // Check if they are not using a linked account
-                                if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
-                                    SkinManager.handleBedrockSkin(playerEntity, clientData);
-                                }
-                            }
-
-                            PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);
+                            handleDownstreamPacket(event.getPacket());
                         }
                     }
 
@@ -644,6 +599,7 @@ public class GeyserSession implements CommandSender {
                 SkinManager.handleBedrockSkin(playerEntity, clientData);
             }
         }
+
         EventResult<DownstreamPacketReceiveEvent<?>> result = EventManager.getInstance().triggerEvent(DownstreamPacketReceiveEvent.of(this, packet));
         if (!result.isCancelled()) {
             PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(result.getEvent().getPacket().getClass(), result.getEvent().getPacket(), this);
