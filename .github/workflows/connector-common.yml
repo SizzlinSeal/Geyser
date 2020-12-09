@@ -30,6 +30,14 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+    - name: Generate settings.xml for Maven Deploy
+      # You may pin to the exact commit or the version.
+      # uses: whelk-io/maven-settings-xml-action@f2ce02adb757b1118ab14604d2e8bdaafdb9bf92
+      uses: whelk-io/maven-settings-xml-action@v14
+      with:
+        repositories: '[{ "id": "github", "name": "GitHub hellohi3654 Apache Maven Packages", "url": "http://some.repository.url", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" } }]'
+        servers: '[{ "id": "github", "username": "hellohi3654", "password": "${{ secrets.PKEY }}" }]'
+        profiles: '[{ "id": "github" }]'
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
