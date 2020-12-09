@@ -72,16 +72,11 @@
     </repositories>
 	
 	<distributionManagement>
-    	<repository>
-        <id>central</id>
-        <name>a0glf1do9xpiq-artifactory-primary-0-releases</name>
-        <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid</url>
-		</repository>
-		<snapshotRepository>
-        <id>snapshots</id>
-        <name>a0glf1do9xpiq-artifactory-primary-0-snapshots</name>
-        <url>https://geyserandroid.jfrog.io/artifactory/geyserandroid-snapshots</url>
-		</snapshotRepository>
+   	<repository>
+     	<id>github</id>
+     	<name>GeyserAndroidHellohi3654</name>
+     	<url>https://maven.pkg.github.com/hellohi3654/Geyser</url>
+  	</repository>
 	</distributionManagement>
 
     <dependencies>
