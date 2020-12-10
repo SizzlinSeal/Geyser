@@ -35,7 +35,7 @@ jobs:
       # uses: whelk-io/maven-settings-xml-action@f2ce02adb757b1118ab14604d2e8bdaafdb9bf92
       uses: whelk-io/maven-settings-xml-action@v14
       with:
-        repositories: '[{ "id": "github", "name": "GitHub hellohi3654 Apache Maven Packages", "url": "http://some.repository.url", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" } }]'
+        repositories: '[{ "id": "github", "name": "GitHub hellohi3654 Apache Maven Packages", "url": "https://maven.pkg.github.com/hellohi3654/Geyser", "releases": { "enabled": "false" }, "snapshots": { "enabled": "true" } }]'
         servers: '[{ "id": "github", "username": "hellohi3654", "password": "${{ secrets.PKEY }}" }]'
         profiles: '[{ "id": "github" }]'
     - name: Set up JDK 1.8
