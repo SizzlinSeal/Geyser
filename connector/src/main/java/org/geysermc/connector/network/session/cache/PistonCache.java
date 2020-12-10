@@ -61,8 +61,7 @@ public class PistonCache {
     }
 
     public void update() {
-        playerDisplacement = Vector3d.ZERO;
-        playerMotion = Vector3f.ZERO;
+        resetPlayerMovement();
 
         if (session.isClosed() || pistons.isEmpty()) {
             updater.cancel(false);
@@ -72,7 +71,17 @@ public class PistonCache {
         pistons.values().forEach(PistonBlockEntity::update);
         pistons.entrySet().removeIf((entry) -> entry.getValue().isDone());
 
+        sendPlayerMovement();
+    }
+
+    public void resetPlayerMovement() {
+        playerDisplacement = Vector3d.ZERO;
+        playerMotion = Vector3f.ZERO;
+    }
+
+    public void sendPlayerMovement() {
         SessionPlayerEntity playerEntity = session.getPlayerEntity();
+        // Sending a movement packet cancels motion from slime blocks in the Y direction
         if (!playerDisplacement.equals(Vector3d.ZERO) && playerMotion.getY() == 0) {
             CollisionManager collisionManager = session.getCollisionManager();
             if (collisionManager.correctPlayerPosition()) {
@@ -94,7 +103,6 @@ public class PistonCache {
         }
         if (!playerMotion.equals(Vector3f.ZERO)) {
             playerEntity.setMotion(playerMotion);
-            System.out.println(playerMotion);
             SetEntityMotionPacket setEntityMotionPacket = new SetEntityMotionPacket();
             setEntityMotionPacket.setRuntimeEntityId(playerEntity.getGeyserId());
             setEntityMotionPacket.setMotion(playerMotion);
@@ -110,7 +118,7 @@ public class PistonCache {
         pistons.put(pistonBlockEntity.getPosition(), pistonBlockEntity);
 
         if (updater == null || updater.isDone()) {
-            updater = session.getConnector().getGeneralThreadPool().scheduleAtFixedRate(this::update, 0, 50, TimeUnit.MILLISECONDS);
+            updater = session.getConnector().getGeneralThreadPool().scheduleAtFixedRate(this::update, 50, 50, TimeUnit.MILLISECONDS);
         }
     }
 
