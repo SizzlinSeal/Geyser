@@ -38,7 +38,6 @@ import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.AddPlayerPacket;
 import com.nukkitx.protocol.bedrock.packet.MovePlayerPacket;
-import com.nukkitx.protocol.bedrock.packet.PlayerListPacket;
 import com.nukkitx.protocol.bedrock.packet.SetEntityLinkPacket;
 import com.nukkitx.protocol.bedrock.packet.UpdateAttributesPacket;
 import lombok.Getter;
@@ -55,8 +54,6 @@ import org.geysermc.connector.scoreboard.Team;
 import org.geysermc.connector.utils.AttributeUtils;
 import org.geysermc.connector.network.session.cache.EntityEffectCache;
 import org.geysermc.connector.network.translators.chat.MessageTranslator;
-import org.geysermc.connector.skin.SkinProvider;
-import org.geysermc.connector.skin.SkinManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +66,7 @@ public class PlayerEntity extends LivingEntity {
     private GameProfile profile;
     private UUID uuid;
     private String username;
+    private String displayName;
     private boolean playerList = true;  // Player is in the player list
 
     /**

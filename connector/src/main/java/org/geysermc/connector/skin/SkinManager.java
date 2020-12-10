@@ -137,10 +137,9 @@ public class SkinManager {
                                 geometry, entity.getUuid()
                         ), geometry, 3);
 
-
-                            // Not a bedrock player check for ears
-                            if (geometry.isFailed() && SkinProvider.ALLOW_THIRD_PARTY_EARS) {
-                                boolean isEars ;
+                        // Not a bedrock player check for ears
+                        if (geometry.isFailed() && SkinProvider.ALLOW_THIRD_PARTY_EARS) {
+                            boolean isEars;
 
                             // Its deadmau5, gotta support his skin :)
                             if (entity.getUuid().toString().equals("1e18d5ff-643d-45c8-b509-43b8461d8614")) {

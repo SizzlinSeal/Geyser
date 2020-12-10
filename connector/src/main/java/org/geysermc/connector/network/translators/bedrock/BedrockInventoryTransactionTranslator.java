@@ -42,10 +42,7 @@ import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerType;
-import com.nukkitx.protocol.bedrock.packet.ContainerOpenPacket;
-import com.nukkitx.protocol.bedrock.packet.InventorySlotPacket;
-import com.nukkitx.protocol.bedrock.packet.InventoryTransactionPacket;
-import com.nukkitx.protocol.bedrock.packet.LevelEventPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import org.geysermc.connector.entity.CommandBlockMinecartEntity;
 import org.geysermc.connector.entity.Entity;
 import org.geysermc.connector.entity.ItemFrameEntity;
@@ -66,6 +63,10 @@ import org.geysermc.connector.utils.InventoryUtils;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * BedrockInventoryTransactionTranslator handles most interactions between the client and the world,
+ * or the client and their inventory.
+ */
 @Translator(packet = InventoryTransactionPacket.class)
 public class BedrockInventoryTransactionTranslator extends PacketTranslator<InventoryTransactionPacket> {
 
@@ -104,6 +105,11 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         } else {
                             // Only update the interaction time if it's valid - that way holding down still works.
                             session.setLastInteractionTime(System.currentTimeMillis());
+                        }
+
+                        Vector3i blockPos = BlockUtils.getBlockPosition(packet.getBlockPosition(), packet.getBlockFace());
+                        if (checkForRange(session, blockPos)) {
+                            return;
                         }
 
                         // Bedrock sends block interact code for a Java entity so we send entity code back to Java
@@ -166,7 +172,6 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        Vector3i blockPos = BlockUtils.getBlockPosition(packet.getBlockPosition(), packet.getBlockFace());
                         ItemEntry handItem = ItemRegistry.getItem(packet.getItemInHand());
                         if (handItem.isBlock()) {
                             session.setLastBlockPlacePosition(blockPos);
@@ -191,18 +196,22 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         session.sendDownstreamPacket(useItemPacket);
                         break;
                     case 2:
-                        int blockState = session.getConnector().getWorldManager().getBlockAt(session, packet.getBlockPosition().getX(), packet.getBlockPosition().getY(), packet.getBlockPosition().getZ());
-                        double blockHardness = BlockTranslator.JAVA_RUNTIME_ID_TO_HARDNESS.get(blockState);
-                        if (session.getGameMode() == GameMode.CREATIVE || (session.getConnector().getConfig().isCacheChunks() && blockHardness == 0)) {
-                            session.setLastBlockPlacedId(null);
-                            session.setLastBlockPlacePosition(null);
+                        int blockState = session.getGameMode() == GameMode.CREATIVE ?
+                                session.getConnector().getWorldManager().getBlockAt(session, packet.getBlockPosition()) : session.getBreakingBlock();
 
-                            LevelEventPacket blockBreakPacket = new LevelEventPacket();
-                            blockBreakPacket.setType(LevelEventType.PARTICLE_DESTROY_BLOCK);
-                            blockBreakPacket.setPosition(packet.getBlockPosition().toFloat());
-                            blockBreakPacket.setData(BlockTranslator.getBedrockBlockId(blockState));
-                            session.sendUpstreamPacket(blockBreakPacket);
+                        session.setLastBlockPlacedId(null);
+                        session.setLastBlockPlacePosition(null);
+
+                        if (checkForRange(session, packet.getBlockPosition())) {
+                            return;
                         }
+
+                        LevelEventPacket blockBreakPacket = new LevelEventPacket();
+                        blockBreakPacket.setType(LevelEventType.PARTICLE_DESTROY_BLOCK);
+                        blockBreakPacket.setPosition(packet.getBlockPosition().toFloat());
+                        blockBreakPacket.setData(BlockTranslator.getBedrockBlockId(blockState));
+                        session.sendUpstreamPacket(blockBreakPacket);
+                        session.setBreakingBlock(BlockTranslator.JAVA_AIR_ID);
 
                         long frameEntityId = ItemFrameEntity.getItemFrameEntityId(session, packet.getBlockPosition());
                         if (frameEntityId != -1 && session.getEntityCache().getEntityByJavaId(frameEntityId) != null) {
@@ -276,5 +285,36 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 }
                 break;
         }
+    }
+
+    /**
+     * Checks to ensure that the range will be accepted by the server.
+     * Not in range doesn't refer to how far a vanilla client goes (that's a whole other mess),
+     * but how much a server will accept from the client maximum
+     *
+     * @param session the session of the client
+     * @param blockPos the block position that the client is attempting to place
+     * @return true if the action should be cancelled
+     */
+    private boolean checkForRange(GeyserSession session, Vector3i blockPos) {
+        boolean isNotInRange = !(session.getPlayerEntity().getPosition().sub(0, EntityType.PLAYER.getOffset(), 0)
+                .distanceSquared(blockPos.toFloat().add(0.5f, 0.5f, 0.5f)) < 64f);
+        if (isNotInRange) {
+            int javaBlockState = session.getConnector().getWorldManager().getBlockAt(session, blockPos);
+            UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
+            updateBlockPacket.setDataLayer(0);
+            updateBlockPacket.setBlockPosition(blockPos);
+            updateBlockPacket.setRuntimeId(BlockTranslator.getBedrockBlockId(javaBlockState));
+            updateBlockPacket.getFlags().addAll(UpdateBlockPacket.FLAG_ALL_PRIORITY);
+            session.sendUpstreamPacket(updateBlockPacket);
+
+            UpdateBlockPacket updateWaterPacket = new UpdateBlockPacket();
+            updateWaterPacket.setDataLayer(1);
+            updateWaterPacket.setBlockPosition(blockPos);
+            updateWaterPacket.setRuntimeId(BlockTranslator.isWaterlogged(javaBlockState) ? BlockTranslator.BEDROCK_WATER_ID : BlockTranslator.BEDROCK_AIR_ID);
+            updateWaterPacket.getFlags().addAll(UpdateBlockPacket.FLAG_ALL_PRIORITY);
+            session.sendUpstreamPacket(updateWaterPacket);
+        }
+        return isNotInRange;
     }
 }

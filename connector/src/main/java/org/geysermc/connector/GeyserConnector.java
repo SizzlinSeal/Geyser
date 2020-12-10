@@ -57,8 +57,8 @@ import org.geysermc.connector.network.translators.world.WorldManager;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
 import org.geysermc.connector.network.translators.world.block.entity.BlockEntityTranslator;
 import org.geysermc.connector.network.translators.collision.CollisionTranslator;
-import org.geysermc.connector.event.events.geyser.GeyserStopEvent;
 import org.geysermc.connector.network.translators.world.block.entity.SkullBlockEntityTranslator;
+import org.geysermc.connector.event.events.geyser.GeyserStopEvent;
 import org.geysermc.connector.utils.DimensionUtils;
 import org.geysermc.connector.utils.LanguageUtils;
 import org.geysermc.connector.utils.LocaleUtils;
@@ -89,6 +89,7 @@ public class GeyserConnector {
             .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES);
 
     public static final String NAME = "Geyser";
+    public static final String GIT_VERSION = "DEV"; // A fallback for running in IDEs
     public static final String VERSION = "DEV"; // A fallback for running in IDEs
 
     private static final String IP_REGEX = "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b";
@@ -396,7 +397,7 @@ public class GeyserConnector {
         }
 
         registeredPluginChannels.add(channel);
-        for ( GeyserSession session : players) {
+        for (GeyserSession session : players) {
             session.registerPluginChannel(channel);
         }
     }
@@ -415,7 +416,7 @@ public class GeyserConnector {
         }
 
         registeredPluginChannels.remove(channel);
-        for ( GeyserSession session : players ) {
+        for (GeyserSession session : players) {
             session.unregisterPluginChannel(channel);
         }
     }
