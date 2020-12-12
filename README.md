@@ -8,7 +8,7 @@
 - Create a issue on my fork I will try and fix it (https://github.com/Hellohi3654/Geyser/issues)
 - You can either compile this branch yourself or download the lastest release (https://github.com/Hellohi3654/Geyser/releases)
 - Here's a list of features this branch includes:
-* [Block Breaking Refractors](https://github.com/GeyserMC/Geyser/pull/1336)
+* [Block Breaking Refactors](https://github.com/GeyserMC/Geyser/pull/1336)
 * [Smooth Pistons](https://github.com/GeyserMC/Geyser/pull/1542)
 * [Replace Spaces in Usernames with Underscores](https://github.com/GeyserMC/Geyser/pull/264)
 * [Improve Playerlist](https://github.com/GeyserMC/Geyser/pull/711)
