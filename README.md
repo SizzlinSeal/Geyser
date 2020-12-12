@@ -9,8 +9,6 @@
 - You can either compile this branch yourself or download the lastest release (https://github.com/Hellohi3654/Geyser/releases)
 - Here's a list of features this branch includes:
 * [Replace Spaces in Usernames with Underscores](https://github.com/GeyserMC/Geyser/pull/264)
-* [Custom Skulls](https://github.com/GeyserMC/Geyser/pull/683)
-* [Move Fixes](https://github.com/GeyserMC/Geyser/pull/699)
 * [Improve Playerlist](https://github.com/GeyserMC/Geyser/pull/711)
 * [Native Geyser Extension Support](https://github.com/GeyserMC/Geyser/pull/742)
 * [Improved Login Process](https://github.com/GeyserMC/Geyser/pull/1184)
