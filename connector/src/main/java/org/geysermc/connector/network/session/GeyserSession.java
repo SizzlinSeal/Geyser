@@ -362,9 +362,6 @@ public class GeyserSession implements CommandSender {
 
     public void connect(RemoteServer remoteServer) {
         this.remoteServer = remoteServer;
-		
-		// Set the hardcoded shield ID to the ID we just defined in StartGamePacket
-        upstream.getSession().getHardcodedBlockingId().set(ItemRegistry.SHIELD.getBedrockId());
 
         PlayerListPacket playerListPacket = new PlayerListPacket();
         playerListPacket.setAction(PlayerListPacket.Action.ADD);
@@ -372,6 +369,9 @@ public class GeyserSession implements CommandSender {
         sendUpstreamPacket(playerListPacket);
 
         startGame();
+
+        // Set the hardcoded shield ID to the ID we just defined in StartGamePacket
+        upstream.getSession().getHardcodedBlockingId().set(ItemRegistry.SHIELD.getBedrockId());
 
         ChunkUtils.sendEmptyChunks(this, playerEntity.getPosition().toInt(), 0, false);
 
@@ -403,7 +403,7 @@ public class GeyserSession implements CommandSender {
         // Don't let the client modify the inventory on death
         // Setting this to true allows keep inventory to work if enabled but doesn't break functionality being false
         gamerulePacket.getGameRules().add(new GameRuleData<>("keepinventory", true));
-		// Ensure client doesn't try and do anything funky; the server handles this for us
+        // Ensure client doesn't try and do anything funky; the server handles this for us
         gamerulePacket.getGameRules().add(new GameRuleData<>("spawnradius", 0));
         sendUpstreamPacket(gamerulePacket);
 
