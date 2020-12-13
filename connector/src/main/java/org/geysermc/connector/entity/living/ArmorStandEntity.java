@@ -66,20 +66,6 @@ public class ArmorStandEntity extends LivingEntity {
     }
 
     @Override
-    public void spawnEntity(GeyserSession session) {
-        this.session = session;
-        super.spawnEntity(session);
-    }
-
-    @Override
-    public boolean despawnEntity(GeyserSession session) {
-        if (secondEntity != null) {
-            secondEntity.despawnEntity(session);
-        }
-        return super.despawnEntity(session);
-    }
-
-    @Override
     public void moveAbsolute(GeyserSession session, Vector3f position, Vector3f rotation, boolean isOnGround, boolean teleported) {
         // Fake the height to be above where it is so the nametag appears in the right location for invisible non-marker armour stands
         lastPositionIncludedOffset = false;
@@ -90,7 +76,7 @@ public class ArmorStandEntity extends LivingEntity {
             lastPositionIncludedOffset = true;
         }
 
-        super.moveAbsolute(session, position, rotation, isOnGround, teleported);
+        super.moveAbsolute(session, position, Vector3f.from(rotation.getX(), rotation.getX(), rotation.getX()), isOnGround, teleported);
     }
 
     @Override
@@ -150,6 +136,21 @@ public class ArmorStandEntity extends LivingEntity {
             secondEntity.updateBedrockMetadata(session);
         }
         super.updateBedrockMetadata(session);
+    }
+    
+    @Override
+    public void spawnEntity(GeyserSession session) {
+        this.rotation = Vector3f.from(rotation.getX(), rotation.getX(), rotation.getX());
+        this.session = session;
+        super.spawnEntity(session);
+    }
+
+    @Override
+    public boolean despawnEntity(GeyserSession session) {
+        if (secondEntity != null) {
+            secondEntity.despawnEntity(session);
+        }
+        return super.despawnEntity(session);
     }
 
     @Override

@@ -44,6 +44,7 @@ import org.geysermc.connector.network.translators.collision.BoundingBox;
 import org.geysermc.connector.network.translators.collision.CollisionManager;
 import org.geysermc.connector.network.translators.collision.CollisionTranslator;
 import org.geysermc.connector.network.translators.collision.translators.BlockCollision;
+import org.geysermc.connector.network.translators.collision.translators.SolidCollision;
 import org.geysermc.connector.network.translators.world.block.BlockStateValues;
 import org.geysermc.connector.network.translators.world.block.BlockTranslator;
 import org.geysermc.connector.utils.BlockEntityUtils;
@@ -77,6 +78,8 @@ public class PistonBlockEntity {
 
     private static final NbtMap AIR_TAG = BlockTranslator.BLOCKS.get(BlockTranslator.BEDROCK_AIR_ID).getCompound("block");
     private static final List<Vector3i> ALL_DIRECTIONS = ImmutableList.of(Vector3i.from(1, 0, 0), Vector3i.from(0, 1, 0), Vector3i.from(0, 0, 1), Vector3i.from(-1, 0, 0), Vector3i.from(0, -1, 0), Vector3i.from(0, 0, -1));
+
+    private static final BlockCollision SOLID_COLLISION = new SolidCollision(null);
 
     private static final BoundingBox HONEY_BOUNDING_BOX;
 
@@ -157,13 +160,18 @@ public class PistonBlockEntity {
         }
     }
 
+    private boolean isPistonHead(int blockId) {
+        String javaId = BlockTranslator.getJavaIdBlockMap().inverse().get(blockId);
+        return javaId.contains("piston_head");
+    }
+
     /**
      * Removes lingering piston heads
      */
     private void removePistonHead() {
         Vector3i blockInFront = position.add(getDirectionOffset());
         int blockId = session.getConnector().getWorldManager().getBlockAt(session, blockInFront);
-        if (blockId == BlockStateValues.getPistonHead(orientation)) {
+        if (isPistonHead(blockId)) {
             ChunkUtils.updateBlock(session, BlockTranslator.JAVA_AIR_ID, blockInFront);
         }
     }
@@ -254,7 +262,7 @@ public class PistonBlockEntity {
             return true;
         }
         // Pistons can only be moved if they aren't extended
-        if (PistonBlockEntityTranslator.isBlock(javaId) && !BlockStateValues.isPistonHead(javaId)) {
+        if (PistonBlockEntityTranslator.isBlock(javaId) && !isPistonHead(javaId)) {
             return !BlockStateValues.getPistonValues().get(javaId);
         }
         // Bedrock, End portal frames, etc. can't be moved
@@ -373,25 +381,36 @@ public class PistonBlockEntity {
         if (action == PistonValueType.PULLING) {
             blockPos = blockPos.add(direction.toDouble());
         }
-
-        int pistonHeadId = BlockStateValues.getPistonHead(orientation);
-        if (testBlockCollision(blockPos, pistonHeadId, playerCollision)) {
-            displacement = getBlockIntersection(blockPos, pistonHeadId, playerCollision);
+        // Use solid collision when pushing because the edge of the piston head is very thin
+        BlockCollision pistonCollision = SOLID_COLLISION;
+        if (action == PistonValueType.PULLING || action == PistonValueType.CANCELLED_MID_PUSH) {
+            int pistonHeadId = BlockStateValues.getPistonHead(orientation);
+            pistonCollision = CollisionTranslator.getCollision(pistonHeadId, 0, 0, 0);
+        }
+        double intersection = getBlockIntersection(blockPos, pistonCollision, playerCollision);
+        if (intersection > 0) {
+            intersection = Math.min(intersection, delta);
+            displacement = intersection + 0.01d;
         }
         // Check collision with all the attached blocks
         for (Object2IntMap.Entry<Vector3i> entry : attachedBlocks.object2IntEntrySet()) {
             blockPos = entry.getKey().toDouble().add(attachedBlockOffset);
             int javaId = entry.getIntValue();
-            if (javaId == BlockTranslator.JAVA_RUNTIME_SLIME_BLOCK_ID) {
-                if (testBlockCollision(blockPos, javaId, playerCollision)) {
-                    applySlimeBlockMotion();
-                }
+            BlockCollision blockCollision = CollisionTranslator.getCollision(javaId, 0, 0, 0);
+
+            if (javaId == BlockTranslator.JAVA_RUNTIME_SLIME_BLOCK_ID && testBlockCollision(blockPos, blockCollision, playerCollision)) {
+                Vector3d playerPos = Vector3d.from(playerCollision.getMiddleX(), playerCollision.getMiddleY(), playerCollision.getMiddleZ());
+                playerPos = playerPos.add(movement.mul(displacement));
+                applySlimeBlockMotion(blockPos.add(0.5, 0.5, 0.5), playerPos);
             }
+
             if (javaId == BlockTranslator.JAVA_RUNTIME_HONEY_BLOCK_ID && isPlayerAttached(blockPos, playerBoundingBox)) {
                 displacement = Math.max(delta, displacement);
             } else if (displacement < 0.51d) { // Don't bother to check collision with other blocks as we've reached the max displacement
-                if (testBlockCollision(blockPos, javaId, playerCollision)) {
-                    displacement = Math.max(getBlockIntersection(blockPos, javaId, playerCollision), displacement);
+                intersection = getBlockIntersection(blockPos, blockCollision, playerCollision);
+                if (intersection > 0) {
+                    intersection = Math.min(intersection, delta);
+                    displacement = Math.max(intersection + 0.01d, displacement);
                 }
             }
         }
@@ -421,8 +440,7 @@ public class PistonBlockEntity {
         return HONEY_BOUNDING_BOX.checkIntersection(blockPos.getX(), blockPos.getY(), blockPos.getZ(), playerBoundingBox);
     }
 
-    private boolean testBlockCollision(Vector3d blockPos, int javaId, BoundingBox playerCollision) {
-        BlockCollision blockCollision = CollisionTranslator.getCollision(javaId, 0, 0, 0);
+    private boolean testBlockCollision(Vector3d blockPos, BlockCollision blockCollision, BoundingBox playerCollision) {
         if (blockCollision != null) {
             BoundingBox blockBoundingBox = blockCollision.getContainingBoundingBox();
             return blockBoundingBox != null && blockBoundingBox.checkIntersection(blockPos.getX(), blockPos.getY(), blockPos.getZ(), playerCollision);
@@ -430,36 +448,81 @@ public class PistonBlockEntity {
         return false;
     }
 
-    private void applySlimeBlockMotion() {
+    /**
+     * Launches a player if the player is on the pushing side of the slime block
+     * @param blockPos Position of the slime block
+     * @param playerPos The player's position
+     */
+    private void applySlimeBlockMotion(Vector3d blockPos, Vector3d playerPos) {
+        PistonValue movementDirection = orientation;
+        // Invert direction when pulling
+        if (action == PistonValueType.PULLING) {
+            switch (movementDirection) {
+                case DOWN:
+                    movementDirection = PistonValue.UP;
+                    break;
+                case UP:
+                    movementDirection = PistonValue.DOWN;
+                    break;
+                case NORTH:
+                    movementDirection = PistonValue.SOUTH;
+                    break;
+                case SOUTH:
+                    movementDirection = PistonValue.NORTH;
+                    break;
+                case WEST:
+                    movementDirection = PistonValue.EAST;
+                    break;
+                case EAST:
+                    movementDirection = PistonValue.WEST;
+                    break;
+            }
+        }
+
         Vector3f movement = getMovement().toFloat();
         Vector3f motion = session.getPistonCache().getPlayerMotion();
         double motionX = motion.getX();
         double motionY = motion.getY();
         double motionZ = motion.getZ();
-        switch (orientation) {
+        switch (movementDirection) {
             case DOWN:
+                if (playerPos.getY() < blockPos.getY()) {
+                    motionY = movement.getY();
+                }
+                break;
             case UP:
-                motionY = movement.getY();
+                if (playerPos.getY() > blockPos.getY()) {
+                    motionY = movement.getY();
+                }
                 break;
             case NORTH:
+                if (playerPos.getZ() < blockPos.getZ()) {
+                    motionZ = movement.getZ();
+                }
+                break;
             case SOUTH:
-                motionZ = movement.getZ();
+                if (playerPos.getZ() > blockPos.getZ()) {
+                    motionZ = movement.getZ();
+                }
                 break;
             case WEST:
+                if (playerPos.getX() < blockPos.getX()) {
+                    motionX = movement.getX();
+                }
+                break;
             case EAST:
-                motionX = movement.getX();
+                if (playerPos.getX() > blockPos.getX()) {
+                    motionX = movement.getX();
+                }
                 break;
         }
         session.getPistonCache().setPlayerMotion(Vector3f.from(motionX, motionY, motionZ));
     }
 
-    private double getBlockIntersection(Vector3d blockPos, int javaId, BoundingBox playerCollision) {
-        BlockCollision blockCollision = CollisionTranslator.getCollision(javaId, 0, 0, 0);
-        if (blockCollision == null) {
+    private double getBlockIntersection(Vector3d blockPos, BlockCollision blockCollision, BoundingBox playerCollision) {
+        if (!testBlockCollision(blockPos, blockCollision, playerCollision)) {
             return 0;
         }
-        // Resolve collision
-        double delta = Math.abs(progress - lastProgress);
         double maxIntersection = 0;
         for (BoundingBox b : blockCollision.getBoundingBoxes()) {
             Vector3d intersectionSize = b.getIntersectionSize(blockPos.getX(), blockPos.getY(), blockPos.getZ(), playerCollision);
@@ -477,11 +540,8 @@ public class PistonBlockEntity {
                     maxIntersection = Math.max(intersectionSize.getX(), maxIntersection);
                     break;
             }
-            if (maxIntersection > delta) {
-                break;
-            }
         }
-        return Math.min(maxIntersection, delta) + 0.01d;
+        return maxIntersection;
     }
 
     /**
