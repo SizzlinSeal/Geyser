@@ -84,7 +84,7 @@ public class SkinManager {
         // This attempts to find the xuid of the player so profile images show up for xbox accounts
         String xuid = "";
         for (GeyserSession player : GeyserConnector.getInstance().getPlayers()) {
-            if (player.getPlayerEntity().getUuid().equals(uuid)) {
+            if (player.getPlayerEntity().getUuid() != null && player.getPlayerEntity().getUuid().equals(uuid)) {
                 xuid = player.getAuthData().getXboxUUID();
                 break;
             }
@@ -275,7 +275,7 @@ public class SkinManager {
                 String skinUrl = isAlex ? SkinProvider.EMPTY_SKIN_ALEX.getTextureUrl() : SkinProvider.EMPTY_SKIN.getTextureUrl();
                 if ("steve".equals(skinUrl) || "alex".equals(skinUrl)) {
                     for (GeyserSession session : GeyserConnector.getInstance().getPlayers()) {
-                        if (session.getPlayerEntity().getUuid().equals(profile.getId())) {
+                        if (session.getPlayerEntity().getUuid() != null && session.getPlayerEntity().getUuid().equals(profile.getId())) {
                             skinUrl = session.getClientData().getSkinId();
                             break;
                         }
