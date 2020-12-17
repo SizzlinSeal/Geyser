@@ -573,7 +573,7 @@ public class GeyserSession implements CommandSender {
 
                             PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);
 							
-							handleDownstreamPacket(event.getPacket());
+			    handleDownstreamPacket(event.getPacket());
                         }
                     }
 
@@ -598,19 +598,6 @@ public class GeyserSession implements CommandSender {
     }
 
     public void handleDownstreamPacket(Packet packet) {
-        //handle consecutive respawn packets
-        if (packet.getClass().equals(ServerRespawnPacket.class)) {
-            manyDimPackets = lastDimPacket != null;
-            lastDimPacket = (ServerRespawnPacket) packet;
-            return;
-        } else if (lastDimPacket != null) {
-            EventResult<DownstreamPacketReceiveEvent<?>> result = EventManager.getInstance().triggerEvent(DownstreamPacketReceiveEvent.of(this, lastDimPacket));
-            if (!result.isCancelled()) {
-                PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(result.getEvent().getPacket().getClass(), result.getEvent().getPacket(), this);
-            }
-            lastDimPacket = null;
-        }
-
         // Required, or else Floodgate players break with Bukkit chunk caching
         if (packet instanceof LoginSuccessPacket) {
             GameProfile profile = ((LoginSuccessPacket) packet).getProfile();
