@@ -38,7 +38,6 @@ import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTeleportConfirmPacket;
-import com.github.steveice10.mc.protocol.packet.ingame.server.ServerRespawnPacket;
 import com.github.steveice10.mc.protocol.packet.login.server.LoginSuccessPacket;
 import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.event.session.*;
@@ -145,6 +144,7 @@ public class GeyserSession implements CommandSender {
      * Used for translating Bedrock block actions to Java entity actions.
      */
     private final Object2LongMap<Vector3i> itemFrameCache = new Object2LongOpenHashMap<>();
+
 
     @Setter
     private Vector2i lastChunkPosition = null;
@@ -589,19 +589,19 @@ public class GeyserSession implements CommandSender {
     }
 
     public void handleDownstreamPacket(Packet packet) {
-    	if (!closed) {
-        			 // Required, or else Floodgate players break with Bukkit chunk caching
-                     if (event.getPacket() instanceof LoginSuccessPacket) {
-                     	GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
-                        playerEntity.setUsername(profile.getName());
-                        playerEntity.setUuid(profile.getId());
-                     // Check if they are not using a linked account
-                     if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
-                        SkinManager.handleBedrockSkin(playerEntity, clientData);
-                     }
-                     }
-                     PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);
-                     }
+			// Required, or else Floodgate players break with Bukkit chunk caching
+            if (event.getPacket() instanceof LoginSuccessPacket) {
+                GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
+                playerEntity.setUsername(profile.getName());
+                playerEntity.setUuid(profile.getId());
+
+            // Check if they are not using a linked account
+            if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
+                SkinManager.handleBedrockSkin(playerEntity, clientData);
+            }
+        }
+
+        PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);		
     }
 
     public void disconnect(String reason) {

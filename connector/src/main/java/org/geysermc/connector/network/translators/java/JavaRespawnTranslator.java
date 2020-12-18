@@ -43,8 +43,6 @@ public class JavaRespawnTranslator extends PacketTranslator<ServerRespawnPacket>
     @Override
     public void translate(ServerRespawnPacket packet, GeyserSession session) {
         Entity entity = session.getPlayerEntity();
-        if (entity == null)
-            return;
 
         float maxHealth = entity.getAttributes().containsKey(AttributeType.MAX_HEALTH) ? entity.getAttributes().get(AttributeType.MAX_HEALTH).getValue() : 20f;
         // Max health must be divisible by two in bedrock

@@ -62,8 +62,8 @@ public class DimensionUtils {
 
         session.getEntityCache().removeAllEntities();
         session.getItemFrameCache().clear();
-        session.getSkullCache().clear();
         session.getPistonCache().clear();
+        session.getSkullCache().clear();
 
         Vector3i pos = Vector3i.from(0, Short.MAX_VALUE, 0);
 

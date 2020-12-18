@@ -47,12 +47,6 @@ public class JavaPlayerPositionRotationTranslator extends PacketTranslator<Serve
 
     @Override
     public void translate(ServerPlayerPositionRotationPacket packet, GeyserSession session) {
-        if (!session.getUpstream().isInitialized()) {
-            // Spawn the player
-            PlayStatusPacket playStatusPacket = new PlayStatusPacket();
-            playStatusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
-            session.sendUpstreamPacket(playStatusPacket);
-        }
 
         if (!session.isLoggedIn())
             return;

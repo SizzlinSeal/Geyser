@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       name:
-        description: 'Build without Release'
+        description: 'Buildz without Release'
         required: true
-        default: 'Build'
+        default: 'Buildz'
       home:
-        description: 'location'
+        description: 'locationb'
         required: false
 
 jobs:
