@@ -588,12 +588,12 @@ public class GeyserSession implements CommandSender {
         }).start();
     }
 
-    public void handleDownstreamPacket(Packet packet event) {
+    public void handleDownstreamPacket(Packet packet) {
 	// Required, or else Floodgate players break with Bukkit chunk caching
-            if (event.getPacket() instanceof LoginSuccessPacket) {
-                GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
-                playerEntity.setUsername(profile.getName());
-                playerEntity.setUuid(profile.getId());
+        if (packet instanceof LoginSuccessPacket) {
+            GameProfile profile = ((LoginSuccessPacket) packet).getProfile();
+            playerEntity.setUsername(profile.getName());
+            playerEntity.setUuid(profile.getId());
 
             // Check if they are not using a linked account
             if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
@@ -601,7 +601,10 @@ public class GeyserSession implements CommandSender {
             }
         }
 
-        PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);		
+        EventResult<DownstreamPacketReceiveEvent<?>> result = EventManager.getInstance().triggerEvent(DownstreamPacketReceiveEvent.of(this, packet));
+        if (!result.isCancelled()) {
+            PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(result.getEvent().getPacket().getClass(), result.getEvent().getPacket(), this);
+        }	
     }
 
     public void disconnect(String reason) {
