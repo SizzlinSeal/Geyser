@@ -90,6 +90,12 @@ public class BlockTranslator {
     public static final int BEDROCK_RUNTIME_COMMAND_BLOCK_ID;
 
     /**
+     * Runtime moving Block ID, used for blocks moved by pistons
+     */
+    public static int BEDROCK_RUNTIME_MOVING_BLOCK_ID;
+
+    // For block breaking animation math idk? Ignore these ^ V
+	/**
      * A list of all Java runtime wool IDs, for use with block breaking math and shears
      */
     public static final IntSet JAVA_RUNTIME_WOOL_IDS = new IntOpenHashSet();
