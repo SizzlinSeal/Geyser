@@ -121,7 +121,7 @@
         <dependency>
             <groupId>com.github.steveice10</groupId>
             <artifactId>mcprotocollib</artifactId>
-            <version>e1db422</version>
+            <version>26201a4</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
@@ -175,6 +175,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
             <version>9.0-beta</version>
@@ -185,12 +191,6 @@
             <artifactId>asm-commons</artifactId>
             <version>9.0-beta</version>
             <scope>compile</scope>
-		</dependency>
-		<dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.1</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

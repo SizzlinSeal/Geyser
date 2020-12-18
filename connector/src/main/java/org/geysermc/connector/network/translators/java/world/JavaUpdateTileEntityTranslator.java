@@ -28,10 +28,10 @@ package org.geysermc.connector.network.translators.java.world;
 import com.github.steveice10.mc.protocol.data.game.entity.player.GameMode;
 import com.github.steveice10.mc.protocol.data.game.world.block.UpdatedTileType;
 import com.github.steveice10.mc.protocol.packet.ingame.server.world.ServerUpdateTileEntityPacket;
-import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerType;
 import com.nukkitx.protocol.bedrock.packet.ContainerOpenPacket;
+import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslator;
@@ -66,7 +66,6 @@ public class JavaUpdateTileEntityTranslator extends PacketTranslator<ServerUpdat
                 // Cache chunks is not enabled; use block entity cache
                 ChunkUtils.CACHED_BLOCK_ENTITIES.removeInt(packet.getPosition());
         BlockEntityUtils.updateBlockEntity(session, translator.getBlockEntityTag(id, packet.getNbt(), blockState), packet.getPosition());
-
         // Check for custom skulls.
         if (SkullBlockEntityTranslator.ALLOW_CUSTOM_SKULLS && packet.getNbt().contains("SkullOwner")) {
             SkullBlockEntityTranslator.spawnPlayer(session, packet.getNbt(), blockState);

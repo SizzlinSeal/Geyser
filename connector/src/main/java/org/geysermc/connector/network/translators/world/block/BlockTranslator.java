@@ -44,7 +44,6 @@ import java.io.InputStream;
 import java.util.*;
 
 public class BlockTranslator {
-    public static final NbtList<NbtMap> BLOCKS;
     /**
      * The Java block runtime ID of air
      */
@@ -74,7 +73,6 @@ public class BlockTranslator {
     public static final Int2DoubleMap JAVA_RUNTIME_ID_TO_HARDNESS = new Int2DoubleOpenHashMap();
     public static final Int2BooleanMap JAVA_RUNTIME_ID_TO_CAN_HARVEST_WITH_HAND = new Int2BooleanOpenHashMap();
     public static final Int2ObjectMap<String> JAVA_RUNTIME_ID_TO_TOOL_TYPE = new Int2ObjectOpenHashMap<>();
-    public static final Int2ObjectMap<String> JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR = new Int2ObjectOpenHashMap<>();
 
     // The index of the collision data in collision.json
     public static final Int2IntMap JAVA_RUNTIME_ID_TO_COLLISION_INDEX = new Int2IntOpenHashMap();
@@ -90,14 +88,8 @@ public class BlockTranslator {
     public static final int BEDROCK_RUNTIME_COMMAND_BLOCK_ID;
 
     /**
-     * Runtime moving Block ID, used for blocks moved by pistons
+     * A list of all Java runtime wool IDs, for use with block breaking math and shears
      */
-    public static int BEDROCK_RUNTIME_MOVING_BLOCK_ID;
-	
-    /**
-	 * A list of all Java runtime wool IDs, for use with block breaking math and shears
-     */
-
     public static final IntSet JAVA_RUNTIME_WOOL_IDS = new IntOpenHashSet();
     public static final int JAVA_RUNTIME_COBWEB_ID;
 
@@ -106,10 +98,7 @@ public class BlockTranslator {
 
     public static final int JAVA_RUNTIME_SPAWNER_ID;
 
-    public static final int JAVA_RUNTIME_SLIME_BLOCK_ID;
-    public static final int JAVA_RUNTIME_HONEY_BLOCK_ID;
-
-    private static final int BLOCK_STATE_VERSION = 17825808;
+    public static final int BLOCK_STATE_VERSION = 17825808;
 
     static {
         /* Load block palette */
@@ -119,7 +108,6 @@ public class BlockTranslator {
         try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(stream))) {
             NbtMap blockPalette = (NbtMap) nbtInputStream.readTag();
             blocksTag = (NbtList<NbtMap>) blockPalette.getList("blocks", NbtType.COMPOUND);
-            BLOCKS = blocksTag;
         } catch (Exception e) {
             throw new AssertionError("Unable to get blocks from runtime block states", e);
         }
@@ -151,8 +139,11 @@ public class BlockTranslator {
             blocksOverride = GeyserConnector.JSON_MAPPER.readTree(is);
         } catch (IOException | AssertionError ignored) { }
 
-        Reflections ref = GeyserConnector.getInstance().useXmlReflections() ? FileUtils.getReflections("org.geysermc.connector.network.translators.world.block.entity") 
-				: new Reflections("org.geysermc.connector.network.translators.world.block.entity");
+        Object2IntMap<NbtMap> addedStatesMap = new Object2IntOpenHashMap<>();
+        addedStatesMap.defaultReturnValue(-1);
+        List<NbtMap> paletteList = new ArrayList<>();
+
+        Reflections ref = GeyserConnector.getInstance().useXmlReflections() ? FileUtils.getReflections("org.geysermc.connector.network.translators.world.block.entity") : new Reflections("org.geysermc.connector.network.translators.world.block.entity");
         Set<Class<?>> blockEntityClasses = EventManager.getInstance().triggerEvent(new BlockEntityRegistryEvent(
                 ref.getTypesAnnotatedWith(BlockEntity.class)
         )).getEvent().getRegisteredTranslators();
@@ -165,8 +156,6 @@ public class BlockTranslator {
         int furnaceRuntimeId = -1;
         int furnaceLitRuntimeId = -1;
         int spawnerRuntimeId = -1;
-        int honeyBlockRuntimeId = -1;
-        int slimeBlockRuntimeId = -1;
         int uniqueJavaId = -1;
         Iterator<Map.Entry<String, JsonNode>> blocksIterator = blocks.fields();
         while (blocksIterator.hasNext()) {
@@ -207,15 +196,6 @@ public class BlockTranslator {
                 JAVA_RUNTIME_ID_TO_COLLISION_INDEX.put(javaRuntimeId, collisionIndexNode.intValue());
             }
 
-            if (javaId.contains("obsidian") || javaId.contains("respawn_anchor")) {
-                // Override obsidian, crying_obsidian, and respawn_anchor to block piston movement
-                JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR.put(javaRuntimeId, "block");
-            } else {
-                JsonNode pistonBehaviorNode = entry.getValue().get("piston_behavior");
-                if (pistonBehaviorNode != null) {
-                    JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR.put(javaRuntimeId, pistonBehaviorNode.textValue());
-                }
-            }
             JAVA_ID_BLOCK_MAP.put(javaId, javaRuntimeId);
 
             // Used for adding all "special" Java block states to block state map
@@ -285,12 +265,6 @@ public class BlockTranslator {
             } else if (javaId.startsWith("minecraft:spawner")) {
                 spawnerRuntimeId = javaRuntimeId;
             }
-
-            if (javaId.equals("minecraft:honey_block")) {
-                honeyBlockRuntimeId = javaRuntimeId;
-            } else if (javaId.equals("minecraft:slime_block")) {
-                slimeBlockRuntimeId = javaRuntimeId;
-            }
         }
 
         if (cobwebRuntimeId == -1) {
@@ -328,30 +302,12 @@ public class BlockTranslator {
         }
         BEDROCK_AIR_ID = airRuntimeId;
 
-        if (honeyBlockRuntimeId == -1) {
-            throw new AssertionError("Unable to find honey block in palette");
-        }
-        JAVA_RUNTIME_HONEY_BLOCK_ID = honeyBlockRuntimeId;
-
-        if (slimeBlockRuntimeId == -1) {
-            throw new AssertionError("Unable to find slime block in palette");
-        }
-        JAVA_RUNTIME_SLIME_BLOCK_ID = slimeBlockRuntimeId;
-
-        // Loop around again to find all item frame runtime IDs and movingBlock's runtime ID
-        int movingBlockId = -1;
+        // Loop around again to find all item frame runtime IDs
         for (Object2IntMap.Entry<NbtMap> entry : blockStateOrderedMap.object2IntEntrySet()) {
             if (entry.getKey().getString("name").equals("minecraft:frame")) {
                 ITEM_FRAMES.put(entry.getKey(), entry.getIntValue());
-            } else if (entry.getKey().getString("name").equals("minecraft:movingBlock")) {
-                movingBlockId = entry.getIntValue();
             }
         }
-
-        if (movingBlockId == -1) {
-            throw new AssertionError("Unable to find moving block in palette");
-        }
-        BEDROCK_RUNTIME_MOVING_BLOCK_ID = movingBlockId;
     }
 
     private BlockTranslator() {

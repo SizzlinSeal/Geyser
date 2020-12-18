@@ -100,12 +100,10 @@ import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
@@ -127,7 +125,6 @@ public class GeyserSession implements CommandSender {
     private EntityCache entityCache;
     private EntityEffectCache effectCache;
     private InventoryCache inventoryCache;
-    private final PistonCache pistonCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
@@ -145,7 +142,6 @@ public class GeyserSession implements CommandSender {
      * Used for translating Bedrock block actions to Java entity actions.
      */
     private final Object2LongMap<Vector3i> itemFrameCache = new Object2LongOpenHashMap<>();
-
 
     @Setter
     private Vector2i lastChunkPosition = null;
@@ -232,6 +228,17 @@ public class GeyserSession implements CommandSender {
      */
     @Setter
     private long lastHitTime;
+
+    /**
+     * Saves if the client is steering left on a boat.
+     */
+    @Setter
+    private boolean steeringLeft;
+    /**
+     * Saves if the client is steering right on a boat.
+     */
+    @Setter
+    private boolean steeringRight;
 
     /**
      * Store the last time the player interacted. Used to fix a right-click spam bug.
@@ -335,7 +342,6 @@ public class GeyserSession implements CommandSender {
         this.entityCache = new EntityCache(this);
         this.effectCache = new EntityEffectCache();
         this.inventoryCache = new InventoryCache(this);
-        this.pistonCache = new PistonCache(this);
         this.worldCache = new WorldCache(this);
         this.windowCache = new WindowCache(this);
 
@@ -349,14 +355,18 @@ public class GeyserSession implements CommandSender {
 
         this.inventoryCache.getInventories().put(0, inventory);
 
+        EventManager.getInstance().triggerEvent(new SessionConnectEvent(this, "Disconnected by Server")) // TODO: @translate
+                .onCancelled(result -> disconnect(result.getEvent().getMessage()));
+
         connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
 
         bedrockServerSession.addDisconnectHandler(disconnectReason -> {
-	EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
-	connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
+            EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
 
-        disconnect(disconnectReason.name());
-        connector.removePlayer(this);
+            connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
+
+            disconnect(disconnectReason.name());
+            connector.removePlayer(this);
         });
     }
 

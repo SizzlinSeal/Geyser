@@ -66,7 +66,7 @@ public class JavaJoinGameTranslator extends PacketTranslator<ServerJoinGamePacke
         bedrockPacket.setUniqueEntityId(session.getPlayerEntity().getGeyserId());
         bedrockPacket.setPlayerPermission(PlayerPermission.MEMBER);
         session.sendUpstreamPacket(bedrockPacket);
-        
+
         PlayStatusPacket playStatus = new PlayStatusPacket();
         playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
         // session.sendPacket(playStatus);
@@ -75,6 +75,11 @@ public class JavaJoinGameTranslator extends PacketTranslator<ServerJoinGamePacke
         playerGameTypePacket.setGamemode(packet.getGameMode().ordinal());
         session.sendUpstreamPacket(playerGameTypePacket);
         session.setGameMode(packet.getGameMode());
+
+//        SetEntityDataPacket entityDataPacket = new SetEntityDataPacket();
+//        entityDataPacket.setRuntimeEntityId(entity.getGeyserId());
+//        entityDataPacket.getMetadata().putAll(entity.getMetadata());
+//        session.sendUpstreamPacket(entityDataPacket);
 
         // Send if client should show respawn screen
         GameRulesChangedPacket gamerulePacket = new GameRulesChangedPacket();

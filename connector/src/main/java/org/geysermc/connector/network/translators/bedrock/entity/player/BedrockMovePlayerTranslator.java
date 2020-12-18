@@ -28,7 +28,6 @@ package org.geysermc.connector.network.translators.bedrock.entity.player;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerRotationPacket;
-import com.google.common.collect.BiMap;
 import com.github.steveice10.packetlib.packet.Packet;
 import com.nukkitx.math.vector.Vector3d;
 import com.nukkitx.math.vector.Vector3f;
@@ -41,13 +40,8 @@ import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslator;
 import org.geysermc.connector.network.translators.Translator;
-import org.geysermc.connector.network.translators.world.block.BlockTranslator;
-import org.geysermc.connector.network.translators.collision.CollisionTranslator;
-import org.geysermc.connector.network.translators.collision.translators.BlockCollision;
 import org.geysermc.connector.network.translators.collision.CollisionManager;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Translator(packet = MovePlayerPacket.class)
@@ -176,11 +170,6 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
                 Double.parseDouble(Float.toString(bedrockPosition.getZ())));
 
         if (session.getConnector().getConfig().isCacheChunks()) {
-            if (session.getPistonCache().shouldCancelMovement()) {
-                recalculatePosition(session);
-                return null;
-            }
-
             // With chunk caching, we can do some proper collision checks
             CollisionManager collisionManager = session.getCollisionManager();
             collisionManager.updatePlayerBoundingBox(position);

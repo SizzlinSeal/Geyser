@@ -81,7 +81,7 @@ public class JavaPlayerListEntryTranslator extends PacketTranslator<ServerPlayer
 
                     playerEntity.setProfile(entry.getProfile());
                     playerEntity.setPlayerList(true);
-                    playerEntity.setValid(true);
+                    playerEntity.setDisplayName(entry.getDisplayName() != null ? LocaleUtils.getLocaleString(entry.getDisplayName().toString(), session.getClientData().getLanguageCode()) : null);
 
                     PlayerListPacket.Entry playerListEntry = SkinManager.buildCachedEntry(session, playerEntity);
 
@@ -106,6 +106,8 @@ public class JavaPlayerListEntryTranslator extends PacketTranslator<ServerPlayer
             }
         }
 
-        session.sendUpstreamPacket(translate);
+//        if (packet.getAction() == PlayerListEntryAction.REMOVE_PLAYER || session.getUpstream().isInitialized()) {
+            session.sendUpstreamPacket(translate);
+//        }
     }
 }

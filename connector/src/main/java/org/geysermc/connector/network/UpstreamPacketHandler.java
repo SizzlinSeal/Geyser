@@ -42,7 +42,6 @@ import org.geysermc.connector.event.events.packet.upstream.ResourcePackClientRes
 import org.geysermc.connector.event.events.packet.upstream.SetLocalPlayerAsInitializedPacketReceive;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.translators.PacketTranslatorRegistry;
-import org.geysermc.connector.network.BedrockProtocol;
 import org.geysermc.connector.utils.LanguageUtils;
 import org.geysermc.connector.utils.LoginEncryptionUtils;
 import org.geysermc.connector.utils.MathUtils;

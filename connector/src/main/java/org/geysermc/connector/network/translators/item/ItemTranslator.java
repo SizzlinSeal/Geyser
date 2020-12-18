@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class ItemTranslator {
-
     public static final Int2ObjectMap<ItemTranslator> ITEM_STACK_TRANSLATORS = new Int2ObjectOpenHashMap<>();
     public static final List<NbtItemStackTranslator> NBT_TRANSLATORS = new ArrayList<>();
 

@@ -52,7 +52,6 @@ import org.geysermc.connector.entity.type.EntityType;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.scoreboard.Team;
 import org.geysermc.connector.utils.AttributeUtils;
-import org.geysermc.connector.network.session.cache.EntityEffectCache;
 import org.geysermc.connector.network.translators.chat.MessageTranslator;
 
 import java.util.ArrayList;
@@ -341,5 +340,13 @@ public class PlayerEntity extends LivingEntity {
         updateAttributesPacket.setRuntimeEntityId(geyserId);
         updateAttributesPacket.setAttributes(attributes);
         session.sendUpstreamPacket(updateAttributesPacket);
+    }
+
+    /**
+     * Returns the DisplayName if set, otherwise the Username
+     * @return Name of player entity
+     */
+    public String getName() {
+        return displayName == null ? username : displayName;
     }
 }
