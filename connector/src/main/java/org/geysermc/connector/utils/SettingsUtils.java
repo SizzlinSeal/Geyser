@@ -52,7 +52,7 @@ public class SettingsUtils {
      */
     public static void buildForm(GeyserSession session) {
         // Cache the language for cleaner access
-        String language = session.getClientData().getLanguageCode();
+        String language = session.getLocale();
 
         CustomFormBuilder builder = new CustomFormBuilder(LanguageUtils.getPlayerLocaleString("geyser.settings.title.main", language));
         builder.setIcon(new FormImage(FormImage.FormImageType.PATH, "textures/ui/settings_glyph_color_2x.png"));
@@ -112,6 +112,9 @@ public class SettingsUtils {
         settingsForm.setResponse(response);
 
         CustomFormResponse settingsResponse = (CustomFormResponse) settingsForm.getResponse();
+        if (settingsResponse == null) {
+            return false;
+        }
         int offset = 0;
 
         offset++; // Client settings title
