@@ -38,6 +38,7 @@ import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTeleportConfirmPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.server.ServerRespawnPacket;
 import com.github.steveice10.mc.protocol.packet.login.server.LoginSuccessPacket;
 import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.event.session.*;
@@ -103,8 +104,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 public class GeyserSession implements CommandSender {
@@ -143,7 +145,6 @@ public class GeyserSession implements CommandSender {
      * Used for translating Bedrock block actions to Java entity actions.
      */
     private final Object2LongMap<Vector3i> itemFrameCache = new Object2LongOpenHashMap<>();
-
 
     @Setter
     private Vector2i lastChunkPosition = null;
@@ -359,14 +360,18 @@ public class GeyserSession implements CommandSender {
 
         this.inventoryCache.getInventories().put(0, inventory);
 
+        EventManager.getInstance().triggerEvent(new SessionConnectEvent(this, "Disconnected by Server")) // TODO: @translate
+                .onCancelled(result -> disconnect(result.getEvent().getMessage()));
+
         connector.getPlayers().forEach(player -> this.emotes.addAll(player.getEmotes()));
 
         bedrockServerSession.addDisconnectHandler(disconnectReason -> {
-	EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
-	connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
+            EventManager.getInstance().triggerEvent(new SessionDisconnectEvent(this, disconnectReason));
 
-        disconnect(disconnectReason.name());
-        connector.removePlayer(this);
+            connector.getLogger().info(LanguageUtils.getLocaleStringLog("geyser.network.disconnect", bedrockServerSession.getAddress().getAddress(), disconnectReason));
+
+            disconnect(disconnectReason.name());
+            connector.removePlayer(this);
         });
     }
 
@@ -559,21 +564,7 @@ public class GeyserSession implements CommandSender {
                     @Override
                     public void packetReceived(PacketReceivedEvent event) {
                         if (!closed) {
-                            // Required, or else Floodgate players break with Bukkit chunk caching
-                            if (event.getPacket() instanceof LoginSuccessPacket) {
-                                GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
-                                playerEntity.setUsername(profile.getName());
-                                playerEntity.setUuid(profile.getId());
-
-                                // Check if they are not using a linked account
-                                if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
-                                    SkinManager.handleBedrockSkin(playerEntity, clientData);
-                                }
-                            }
-
-                            PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);
-							
-			    handleDownstreamPacket(event.getPacket());
+                            handleDownstreamPacket(event.getPacket());
                         }
                     }
 
@@ -598,22 +589,19 @@ public class GeyserSession implements CommandSender {
     }
 
     public void handleDownstreamPacket(Packet packet) {
-        // Required, or else Floodgate players break with Bukkit chunk caching
-        if (packet instanceof LoginSuccessPacket) {
-            GameProfile profile = ((LoginSuccessPacket) packet).getProfile();
-            playerEntity.setUsername(profile.getName());
-            playerEntity.setUuid(profile.getId());
-
-            // Check if they are not using a linked account
-            if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
-                SkinManager.handleBedrockSkin(playerEntity, clientData);
-            }
-        }
-
-        EventResult<DownstreamPacketReceiveEvent<?>> result = EventManager.getInstance().triggerEvent(DownstreamPacketReceiveEvent.of(this, packet));
-        if (!result.isCancelled()) {
-            PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(result.getEvent().getPacket().getClass(), result.getEvent().getPacket(), this);
-        }
+    	if (!closed) {
+        			 // Required, or else Floodgate players break with Bukkit chunk caching
+                     if (event.getPacket() instanceof LoginSuccessPacket) {
+                     	GameProfile profile = ((LoginSuccessPacket) event.getPacket()).getProfile();
+                        playerEntity.setUsername(profile.getName());
+                        playerEntity.setUuid(profile.getId());
+                     // Check if they are not using a linked account
+                     if (connector.getAuthType() == AuthType.OFFLINE || playerEntity.getUuid().getMostSignificantBits() == 0) {
+                        SkinManager.handleBedrockSkin(playerEntity, clientData);
+                     }
+                     }
+                     PacketTranslatorRegistry.JAVA_TRANSLATOR.translate(event.getPacket().getClass(), event.getPacket(), GeyserSession.this);
+                     }
     }
 
     public void disconnect(String reason) {

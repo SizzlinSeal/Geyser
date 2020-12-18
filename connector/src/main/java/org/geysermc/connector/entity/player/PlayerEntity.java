@@ -342,4 +342,12 @@ public class PlayerEntity extends LivingEntity {
         updateAttributesPacket.setAttributes(attributes);
         session.sendUpstreamPacket(updateAttributesPacket);
     }
+
+    /**
+     * Returns the DisplayName if set, otherwise the Username
+     * @return Name of player entity
+     */
+    public String getName() {
+        return displayName == null ? username : displayName;
+    }
 }
