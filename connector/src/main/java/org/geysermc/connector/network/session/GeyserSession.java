@@ -115,6 +115,7 @@ public class GeyserSession implements CommandSender {
     private EntityCache entityCache;
     private EntityEffectCache effectCache;
     private InventoryCache inventoryCache;
+    private final PistonCache pistonCache;
     private WorldCache worldCache;
     private WindowCache windowCache;
     private final Int2ObjectMap<TeleportCache> teleportMap = new Int2ObjectOpenHashMap<>();
@@ -132,6 +133,7 @@ public class GeyserSession implements CommandSender {
      * Used for translating Bedrock block actions to Java entity actions.
      */
     private final Object2LongMap<Vector3i> itemFrameCache = new Object2LongOpenHashMap<>();
+
 
     @Setter
     private Vector2i lastChunkPosition = null;
@@ -332,6 +334,7 @@ public class GeyserSession implements CommandSender {
         this.entityCache = new EntityCache(this);
         this.effectCache = new EntityEffectCache();
         this.inventoryCache = new InventoryCache(this);
+        this.pistonCache = new PistonCache(this);
         this.worldCache = new WorldCache(this);
         this.windowCache = new WindowCache(this);
 
@@ -785,7 +788,7 @@ public class GeyserSession implements CommandSender {
 
     /**
      * Queue a packet to be sent to player.
-     * 
+     *
      * @param packet the bedrock packet from the NukkitX protocol lib
      */
     public void sendUpstreamPacket(BedrockPacket packet) {
