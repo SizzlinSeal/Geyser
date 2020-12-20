@@ -75,6 +75,7 @@ public class BlockTranslator {
     public static final Int2BooleanMap JAVA_RUNTIME_ID_TO_CAN_HARVEST_WITH_HAND = new Int2BooleanOpenHashMap();
     public static final Int2ObjectMap<String> JAVA_RUNTIME_ID_TO_TOOL_TYPE = new Int2ObjectOpenHashMap<>();
     public static final Int2ObjectMap<String> JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR = new Int2ObjectOpenHashMap<>();
+    public static final Int2BooleanMap JAVA_RUNTIME_ID_TO_HAS_BLOCK_ENTITY = new Int2BooleanOpenHashMap();
 
     // The index of the collision data in collision.json
     public static final Int2IntMap JAVA_RUNTIME_ID_TO_COLLISION_INDEX = new Int2IntOpenHashMap();
@@ -94,10 +95,7 @@ public class BlockTranslator {
      */
     public static int BEDROCK_RUNTIME_MOVING_BLOCK_ID;
 
-    // For block breaking animation math idk? Ignore these ^ V
-	/**
-     * A list of all Java runtime wool IDs, for use with block breaking math and shears
-     */
+    // For block breaking animation math
     public static final IntSet JAVA_RUNTIME_WOOL_IDS = new IntOpenHashSet();
     public static final int JAVA_RUNTIME_COBWEB_ID;
 
@@ -216,6 +214,12 @@ public class BlockTranslator {
                     JAVA_RUNTIME_ID_TO_PISTON_BEHAVIOR.put(javaRuntimeId, pistonBehaviorNode.textValue());
                 }
             }
+
+            JsonNode hasBlockEntityNode = entry.getValue().get("has_block_entity");
+            if (hasBlockEntityNode != null) {
+                JAVA_RUNTIME_ID_TO_HAS_BLOCK_ENTITY.put(javaRuntimeId, hasBlockEntityNode.booleanValue());
+            }
+
             JAVA_ID_BLOCK_MAP.put(javaId, javaRuntimeId);
 
             // Used for adding all "special" Java block states to block state map

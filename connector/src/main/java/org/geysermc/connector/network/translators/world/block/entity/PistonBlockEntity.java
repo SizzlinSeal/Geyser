@@ -277,8 +277,8 @@ public class PistonBlockEntity {
             case "push_only":
                 return isPushing;
         }
-        // Pistons can't move tile entities
-        return BlockTranslator.getBlockEntityString(javaId) == null;
+        // Pistons can't move block entities
+        return !BlockTranslator.JAVA_RUNTIME_ID_TO_HAS_BLOCK_ENTITY.getOrDefault(javaId, false);
     }
 
     private boolean cannotDestroyBlock(int javaId)  {
@@ -397,6 +397,11 @@ public class PistonBlockEntity {
             blockPos = entry.getKey().toDouble().add(attachedBlockOffset);
             int javaId = entry.getIntValue();
             BlockCollision blockCollision = CollisionTranslator.getCollision(javaId, 0, 0, 0);
+            // Check if the player collides with the movingBlock block entity
+            Vector3d finalBlockPos = entry.getKey().toDouble().add(movement);
+            if (testBlockCollision(finalBlockPos, SOLID_COLLISION, playerCollision)) {
+                session.getPistonCache().setPlayerCollided(true);
+            }
 
             if (javaId == BlockTranslator.JAVA_RUNTIME_SLIME_BLOCK_ID && testBlockCollision(blockPos, blockCollision, playerCollision)) {
                 Vector3d playerPos = Vector3d.from(playerCollision.getMiddleX(), playerCollision.getMiddleY(), playerCollision.getMiddleZ());
