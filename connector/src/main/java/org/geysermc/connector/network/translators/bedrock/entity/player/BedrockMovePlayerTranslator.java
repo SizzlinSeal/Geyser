@@ -170,6 +170,11 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
                 Double.parseDouble(Float.toString(bedrockPosition.getZ())));
 
         if (session.getConnector().getConfig().isCacheChunks()) {
+            if (session.getPistonCache().shouldCancelMovement()) {
+                recalculatePosition(session);
+                return null;
+            }
+
             // With chunk caching, we can do some proper collision checks
             CollisionManager collisionManager = session.getCollisionManager();
             collisionManager.updatePlayerBoundingBox(position);
