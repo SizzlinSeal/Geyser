@@ -170,11 +170,6 @@ public class BlockTranslator {
             Map.Entry<String, JsonNode> entry = blocksIterator.next();
             String javaId = entry.getKey();
 
-            // Check for an override
-            if (blocksOverride != null && blocksOverride.has(javaId)) {
-                entry = new AbstractMap.SimpleEntry<>(javaId, blocksOverride.get(javaId));
-            }
-
             NbtMap blockTag = buildBedrockState(entry.getValue());
             int bedrockRuntimeId = blockStateOrderedMap.getOrDefault(blockTag, -1);
             if (bedrockRuntimeId == -1) {
