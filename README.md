@@ -55,7 +55,7 @@ Take a look [here](https://github.com/GeyserMC/Geyser/wiki#Setup) for how to set
 - Lecterns
 - Near-perfect movement (to the point where anticheat on large servers is unlikely to ban you)
 - Resource pack conversion/CustomModelData
-- Some Entity Flags
+- Some Entity Flags (We don't talk about the squids)
 - The Following Inventories 
   - Enchantment Table (as a proper GUI)
   - Beacon
